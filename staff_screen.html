@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Panel de Gestión de Pedidos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2e22",
+                        "text-primary-light": "#102216",
+                        "text-secondary-light": "#4a6352",
+                        "text-primary-dark": "#ffffff",
+                        "text-secondary-dark": "#9abfac",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-text-primary-light dark:text-text-primary-dark min-h-screen flex flex-col">
+<header class="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-primary/10 px-4 pt-12 pb-4">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="size-12 rounded-full bg-surface-light dark:bg-surface-dark border-2 border-primary overflow-hidden shadow-sm" data-alt="Staff profile picture showing a smiling butcher in uniform">
+<img alt="Perfil del empleado" class="w-full h-full object-cover" data-alt="Portrait of a smiling butcher wearing a striped apron" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyikV7JneZ-8SQV32sF3hQ5fRYZqYrjCWeWkqO1i7qOgTwbv7-ipeLhcQmjoBz6DFx5ipLXH9-p89EhJ1tUU4dV0_75ySF47qF40_prlNQFJcvEFVonsl2LDR_LCZmUiVPKu5O7uhLK0DgKk3w2qq0a0sGHLJfpLRaYmjTHCrZvxTgtHevAzBK5xuqjmjICh9i6xlnRDa9k9fXaJVQFt3NPQLXyhkcqQHEYPo35f8RwQEONJ7Tjf_tSCOXclqJkKvPE4kkVQvTd3pE"/>
+</div>
+<div class="absolute bottom-0 right-0 size-3.5 bg-primary rounded-full border-2 border-background-light dark:border-background-dark"></div>
+</div>
+<div>
+<h1 class="text-lg font-bold leading-tight">Jaime Carnicero</h1>
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Mostrador • Turno 8-4</p>
+</div>
+</div>
+<button class="flex items-center gap-2 bg-surface-light dark:bg-surface-dark border border-primary/20 px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-transform">
+<span class="size-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-sm font-bold text-primary">En Línea</span>
+</button>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+<button class="flex-shrink-0 px-4 py-2 bg-primary text-background-dark rounded-lg font-bold text-sm shadow-md shadow-primary/20">
+                Pedidos Activos (5)
+            </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-surface-dark border border-primary/10 text-text-secondary-light dark:text-text-secondary-dark rounded-lg font-semibold text-sm">
+                Prioridad
+            </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white dark:bg-surface-dark border border-primary/10 text-text-secondary-light dark:text-text-secondary-dark rounded-lg font-semibold text-sm">
+                Completados
+            </button>
+</div>
+</header>
+<main class="flex-1 px-4 py-4 space-y-4 overflow-y-auto pb-24">
+<div class="bg-gradient-to-br from-surface-light to-[#e8fce8] dark:from-surface-dark dark:to-[#1a3825] rounded-xl shadow-lg border-l-4 border-l-orange-500 overflow-hidden relative">
+<div class="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                PRIORIDAD ALTA
+            </div>
+<div class="p-5">
+<div class="flex justify-between items-start mb-3">
+<div>
+<p class="text-sm font-bold text-orange-600 dark:text-orange-400 mb-0.5">PEDIDO #1234</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span> 12:45 PM • Hace 4 mins
+                        </p>
+</div>
+</div>
+<h2 class="text-2xl font-extrabold text-text-primary-light dark:text-text-primary-dark mb-2">
+                    500g Solomillo
+                </h2>
+<div class="bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 rounded-lg p-3 mb-4 flex items-start gap-2">
+<span class="material-symbols-outlined text-orange-600 dark:text-orange-400 text-lg mt-0.5">info</span>
+<p class="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                        "Por favor, cortar en 2 filetes gruesos, quitar el exceso de grasa."
+                    </p>
+</div>
+<div class="bg-white dark:bg-black/20 rounded-lg p-1 flex relative">
+<div class="absolute top-1 bottom-1 left-1 w-[calc(33.33%-0.25rem)] bg-orange-500 rounded shadow-sm transition-all duration-300"></div>
+<button class="flex-1 relative z-10 py-2 text-sm font-bold text-white text-center">Pendiente</button>
+<button class="flex-1 relative z-10 py-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark hover:text-text-primary-light dark:hover:text-text-primary-dark text-center">Preparando</button>
+<button class="flex-1 relative z-10 py-2 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark hover:text-text-primary-light dark:hover:text-text-primary-dark text-center">Listo</button>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-md border border-primary/5 p-4">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<div class="bg-primary/10 text-primary-dark dark:text-primary px-2 py-1 rounded text-xs font-bold">#4922</div>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">12:48 PM</span>
+</div>
+<button class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex gap-4">
+<div class="flex-1">
+<h3 class="text-xl font-bold mb-1">500g Pechuga de Pollo</h3>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark mb-3">Ecológico, Corral</p>
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 mb-4">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm">edit_note</span>
+<span class="text-xs font-bold text-blue-700 dark:text-blue-300">Bolsas separadas</span>
+</div>
+</div>
+<div class="size-20 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0" data-alt="Raw chicken breast fillets on a wooden board">
+<img alt="Imagen del producto" class="w-full h-full object-cover" data-alt="Close up of raw chicken breast fillets" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCALK9TfvNWzwWlVOJWVpgbhoJ2JtnI8unWLuiVV1-a2aoQqGoGHca6HXsgvPyBXKlzrcl_gAP_JWnpHeaFT48JCG9fRtLzDt36qGJ7Uqp1K6i4YOgD_S3jVu7F6cSOR_Dvy-lpxtABr8tu5T935XR6EJLePoj60jLxKEapHpdUOcpoZ2mP4ZW3KlaGUirQuaaLTGCKRyDLZd9pkm7BlxRq7lJ2lRLAbm-R0BEmVt_Q-TinFvzsSMRaSdNBjQ9nU4mLcbPfGSyetp8L"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-2">
+<button class="py-3 px-4 rounded-lg bg-background-light dark:bg-background-dark border border-gray-200 dark:border-gray-700 font-bold text-sm text-text-secondary-light dark:text-text-secondary-dark flex justify-center items-center gap-2">
+                    Empezar
+                </button>
+<button class="py-3 px-4 rounded-lg bg-primary text-background-dark font-bold text-sm shadow-sm hover:brightness-105 active:scale-95 transition-all flex justify-center items-center gap-2">
+                    Listo
+                    <span class="material-symbols-outlined text-lg">check_circle</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-md border-l-4 border-l-blue-500 p-4">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<div class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-bold">#4918</div>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">12:30 PM</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider border border-blue-100">Preparando</span>
+</div>
+<div class="flex gap-4 mb-4">
+<div class="flex-1">
+<h3 class="text-xl font-bold mb-1">200g Jamón Serrano</h3>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Gran Reserva 24m</p>
+<div class="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-100 dark:border-yellow-800">
+<span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-sm">content_cut</span>
+<span class="text-xs font-bold text-yellow-700 dark:text-yellow-300">Cortes finos</span>
+</div>
+</div>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-4">
+<div class="bg-blue-500 h-2 rounded-full w-2/3"></div>
+</div>
+<button class="w-full py-3 px-4 rounded-lg bg-primary text-background-dark font-bold text-base shadow-lg shadow-primary/20 hover:brightness-105 active:scale-95 transition-all flex justify-center items-center gap-2">
+                Marcar como Listo
+                <span class="material-symbols-outlined">done_all</span>
+</button>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-md border border-primary/5 p-4 opacity-75">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<div class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded text-xs font-bold">#4915</div>
+<span class="text-xs text-text-secondary-light dark:text-text-secondary-dark">12:15 PM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex-1">
+<h3 class="text-xl font-bold mb-1 text-gray-600 dark:text-gray-400">1kg Carne Picada</h3>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Ternera Magra</p>
+</div>
+<div class="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-3xl text-gray-400">inventory_2</span>
+</div>
+</div>
+<button class="w-full mt-3 py-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-bold text-sm flex justify-center items-center gap-2">
+                Iniciar Pedido
+            </button>
+</div>
+</main>
+<button class="fixed z-30 bottom-24 right-4 size-14 bg-black text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+</button>
+<nav class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-surface-dark border-t border-primary/10 px-6 py-3 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+<ul class="flex justify-between items-center">
+<li>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="p-1.5 rounded-full bg-primary/20 text-text-primary-light dark:text-primary-dark group-hover:bg-primary group-hover:text-background-dark transition-colors">
+<span class="material-symbols-outlined filled">list_alt</span>
+</div>
+<span class="text-[10px] font-bold text-text-primary-light dark:text-text-primary-dark">Pedidos</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center gap-1 group text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<div class="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">inventory</span>
+</div>
+<span class="text-[10px] font-bold group-hover:text-primary">Stock</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center gap-1 group text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<div class="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">history</span>
+</div>
+<span class="text-[10px] font-bold group-hover:text-primary">Historial</span>
+</a>
+</li>
+<li>
+<a class="flex flex-col items-center gap-1 group text-text-secondary-light dark:text-text-secondary-dark" href="#">
+<div class="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<span class="text-[10px] font-bold group-hover:text-primary">Ajustes</span>
+</a>
+</li>
+</ul>
+</nav>
+
+</body></html>

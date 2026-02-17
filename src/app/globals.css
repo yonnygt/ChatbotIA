@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* ==========================================
+   ButcherAI — Light Apple Green Design System
+   ========================================== */
+
+@theme inline {
+  /* — Colors — */
+  --color-primary: #7ed957;
+  --color-primary-dark: #5cb838;
+  --color-primary-light: #e8f5e0;
+  --color-background-light: #f9fdf6;
+  --color-background-dark: #102216;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1a3324;
+  --color-surface-highlight: #23482f;
+  --color-text-main: #1a2e1a;
+  --color-text-secondary: #5a8a5a;
+  --color-text-inverse: #ffffff;
+
+  /* — Typography — */
+  --font-display: "Plus Jakarta Sans", sans-serif;
+
+  /* — Semantic Colors — */
+  --color-bg-page: var(--bg-page);
+  --color-text-page: var(--text-page);
+  --color-surface-card: var(--surface-card);
+
+  /* — Border Radius — */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* — Shadows — */
+  --shadow-soft: 0 4px 20px -2px rgba(126, 217, 87, 0.2);
+  --shadow-glow: 0 0 15px rgba(126, 217, 87, 0.35);
+
+  /* — Animations — */
+  --animate-scan: scan 2s infinite linear;
+  --animate-pulse-wave: pulse-wave 1.5s ease-in-out infinite;
+}
+
+/* Base Theme (Customer - Light) */
+:root {
+  --bg-page: #f9fdf6;
+  --text-page: #1a2e1a;
+  --surface-card: #ffffff;
+  color-scheme: light;
+}
+
+/* Staff Theme (Dark) */
+.theme-staff {
+  --bg-page: #102216;
+  --text-page: #e0fde8;
+  --surface-card: #1a3324;
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar utilities */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Material Symbols filled variant */
+.material-symbols-outlined.filled {
+  font-variation-settings: "FILL" 1;
+}
+
+/* Custom keyframes */
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pulse-wave {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes audio-bar {
+
+  0%,
+  100% {
+    height: 4px;
+  }
+
+  50% {
+    height: 20px;
+  }
+}
+
+/* Utility: safe area padding */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Toast slide-down animation */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* Pulse glow for QR ready */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(126, 217, 87, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(126, 217, 87, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

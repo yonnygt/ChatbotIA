@@ -1,0 +1,6 @@
+Analyzing Customer...
+Top colors for Customer: [["#13ec5b",1],["#0eb545",1],["#e0fde8",1],["#f6f8f6",1],["#102216",1],["#ffffff",1],["#1a3324",1],["#0d1b12",1],["#4c9a66",1],["rgba(19, 236, 91, 0.15)",1]]
+
+Analyzing Staff...
+Top colors for Staff: [["#102216",2],["#ffffff",2],["#491",2],["#13ec5b",1],["#f6f8f6",1],["#1a2e22",1],["#4a6352",1],["#9abfac",1],["#e8fce8",1],["#1a3825",1]]
+
