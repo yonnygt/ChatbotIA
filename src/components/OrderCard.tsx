@@ -8,31 +8,35 @@ interface OrderCardProps {
 
 const statusConfig: Record<
     string,
-    { label: string; color: string; icon: string; bgColor: string }
+    { label: string; color: string; icon: string; bgColor: string; border: string }
 > = {
     pending: {
         label: "Pendiente",
-        color: "text-yellow-400",
+        color: "text-amber-500",
         icon: "schedule",
-        bgColor: "bg-yellow-500/10",
+        bgColor: "bg-amber-500/10",
+        border: "border-amber-500/20",
     },
     preparing: {
         label: "Preparando",
-        color: "text-blue-400",
+        color: "text-blue-500",
         icon: "skillet",
         bgColor: "bg-blue-500/10",
+        border: "border-blue-500/20",
     },
     ready: {
         label: "Listo",
         color: "text-primary",
         icon: "check_circle",
         bgColor: "bg-primary/10",
+        border: "border-primary/20",
     },
     completed: {
         label: "Entregado",
         color: "text-gray-400",
         icon: "task_alt",
-        bgColor: "bg-gray-500/10",
+        bgColor: "bg-gray-500/8",
+        border: "border-gray-300/20",
     },
 };
 
@@ -65,15 +69,15 @@ export default function OrderCard({
     };
 
     return (
-        <div className="rounded-2xl bg-surface-light dark:bg-surface-dark border border-gray-100 dark:border-gray-700/50 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div className={`rounded-2xl bg-surface-light dark:bg-surface-dark border dark:border-white/5 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-elevated gradient-border ${status.border} border-gray-100/80`}>
             {/* Header */}
             <div className="flex items-center justify-between p-4 pb-2">
                 <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-text-main dark:text-white">
+                    <span className="text-lg font-extrabold text-text-main dark:text-white tracking-tight">
                         {order.orderNumber}
                     </span>
                     {order.priority === "high" && (
-                        <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400 border border-red-500/20">
+                        <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-2.5 py-0.5 text-[10px] font-bold text-red-500 border border-red-500/15">
                             <span className="material-symbols-outlined text-[12px] filled">priority_high</span>
                             Urgente
                         </span>
@@ -88,11 +92,11 @@ export default function OrderCard({
             {/* Items */}
             <div className="px-4 py-2">
                 {items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-1">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                        <span className="text-sm text-text-secondary dark:text-gray-400">
                             {item.name} — {item.qty}
                         </span>
-                        <span className="text-sm font-semibold text-text-main dark:text-white">
+                        <span className="text-sm font-semibold text-text-main dark:text-white tabular-nums">
                             {parseFloat(item.subtotal || item.unitPrice || "0").toFixed(2)} €
                         </span>
                     </div>
@@ -104,18 +108,18 @@ export default function OrderCard({
 
             {/* Notes */}
             {order.notes && (
-                <div className="mx-4 mb-2 flex items-start gap-2 rounded-lg bg-yellow-500/5 dark:bg-yellow-500/10 p-2.5 border border-yellow-500/10">
-                    <span className="material-symbols-outlined text-yellow-400 text-[16px] mt-0.5">
+                <div className="mx-4 mb-2 flex items-start gap-2 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 p-2.5 border border-amber-500/10">
+                    <span className="material-symbols-outlined text-amber-500 text-[16px] mt-0.5">
                         edit_note
                     </span>
-                    <p className="text-xs text-yellow-600 dark:text-yellow-300 leading-relaxed">
+                    <p className="text-xs text-amber-600 dark:text-amber-300 leading-relaxed">
                         {order.notes}
                     </p>
                 </div>
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50 p-4 pt-3">
+            <div className="flex items-center justify-between border-t border-gray-100 dark:border-white/5 p-4 pt-3">
                 <div className="flex items-center gap-4">
                     {order.status !== "completed" && order.estimatedMinutes && (
                         <div className="flex items-center gap-1 text-xs text-text-secondary">
@@ -123,18 +127,18 @@ export default function OrderCard({
                             ~{order.estimatedMinutes} min
                         </div>
                     )}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-text-secondary/60">
                         {formatDate(order.createdAt)}
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-base font-bold text-text-main dark:text-white">
+                    <span className="text-base font-extrabold text-text-main dark:text-white tabular-nums">
                         {total.toFixed(2)} €
                     </span>
                     {variant === "customer" && order.status === "ready" && (
                         <a
                             href={`/orders/${order.id}/qr`}
-                            className="ml-2 flex items-center gap-1.5 rounded-full bg-text-main dark:bg-white px-3 py-1.5 text-xs font-bold text-white dark:text-text-main shadow-soft hover:brightness-110 active:scale-95 transition-all"
+                            className="ml-2 flex items-center gap-1.5 rounded-full bg-background-dark dark:bg-white px-3 py-1.5 text-xs font-bold text-white dark:text-background-dark shadow-soft hover:brightness-110 active:scale-95 transition-all"
                         >
                             <span className="material-symbols-outlined text-[16px]">qr_code</span>
                             Ver QR
@@ -143,7 +147,7 @@ export default function OrderCard({
                     {variant === "staff" && action && onAction && (
                         <button
                             onClick={() => onAction(order, order.status)}
-                            className="ml-2 flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-text-main shadow-soft hover:brightness-110 active:scale-95 transition-all"
+                            className="ml-2 flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-background-dark shadow-soft hover:shadow-glow hover:brightness-110 active:scale-95 transition-all"
                         >
                             <span className="material-symbols-outlined text-[16px]">
                                 {action.icon}

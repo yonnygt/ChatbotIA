@@ -4,29 +4,27 @@ import NavBar from "@/components/NavBar";
 
 export default function FavoritesPage() {
     return (
-        <div className="flex flex-col min-h-dvh pb-24">
-            {/* Header */}
-            <header className="sticky top-0 z-10 bg-surface-light dark:bg-surface-dark border-b border-gray-100 dark:border-gray-800 px-6 pt-14 pb-4">
-                <h1 className="text-2xl font-bold text-text-main dark:text-white">
-                    Mis Pedidos Favoritos
-                </h1>
-                <p className="text-sm text-text-secondary mt-1">
-                    Repite tus pedidos habituales con un toque
-                </p>
+        <div className="flex flex-col min-h-dvh bg-background-light">
+            <header className="px-5 pt-12 pb-4">
+                <h1 className="text-2xl font-extrabold text-text-main tracking-tight">Favoritos</h1>
+                <p className="text-sm text-text-secondary mt-1">Tus pedidos guardados para reordenar rápido</p>
             </header>
 
-            {/* Empty state */}
-            <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-                <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[64px] mb-4">
-                    favorite
-                </span>
-                <p className="text-lg font-bold text-gray-400 dark:text-gray-500">
-                    Sin favoritos aún
-                </p>
-                <p className="text-sm text-gray-400 dark:text-gray-600 mt-1 max-w-xs">
-                    Cuando hagas pedidos, podrás guardarlos como favoritos para repetirlos fácilmente
-                </p>
-            </div>
+            <main className="flex-1 flex flex-col items-center justify-center px-8 -mt-12">
+                <div className="text-center">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/8 mx-auto mb-5">
+                        <span className="material-symbols-outlined text-primary/40 text-[48px]">favorite</span>
+                    </div>
+                    <h2 className="text-lg font-bold text-text-main">Aún no tienes favoritos</h2>
+                    <p className="text-sm text-text-secondary mt-2 leading-relaxed max-w-xs mx-auto">
+                        Guarda tus pedidos favoritos para repetirlos con un solo toque.
+                    </p>
+                    <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-bold text-primary-dark">
+                        <span className="material-symbols-outlined text-[16px]">lightbulb</span>
+                        Próximamente disponible
+                    </div>
+                </div>
+            </main>
 
             <NavBar variant="customer" />
         </div>

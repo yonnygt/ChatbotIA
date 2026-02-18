@@ -1,11 +1,20 @@
 // Shared types for ButcherAI
 
+export interface User {
+    id: number;
+    email: string;
+    name: string;
+    role: "cliente" | "staff" | "admin";
+    createdAt: string | null;
+}
+
 export interface Product {
     id: number;
     name: string;
     description: string | null;
     category: string;
     price: string;
+    priceVes: string | null;
     unit: string | null;
     imageUrl: string | null;
     sku: string | null;
@@ -20,6 +29,7 @@ export interface ChatMessage {
     timestamp: string;
     product?: Product;
     orderProposal?: OrderProposal;
+    isOrderConfirmed?: boolean;
 }
 
 export interface OrderProposal {
@@ -63,4 +73,12 @@ export interface OrderItem {
     unitPrice: string;
     subtotal: string;
     productId?: number;
+}
+
+export interface ExchangeRate {
+    id: number;
+    currency: string;
+    rateVes: string;
+    source: string;
+    fetchedAt: string | null;
 }

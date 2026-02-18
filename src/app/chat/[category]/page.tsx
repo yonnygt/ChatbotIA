@@ -3,288 +3,268 @@
 import { useState, useRef, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import ChatBubble from "@/components/ChatBubble";
+import QuickSuggestions from "@/components/QuickSuggestions";
 import MicButton from "@/components/MicButton";
 import { useGeminiRecorder } from "@/hooks/useGeminiRecorder";
-import type { ChatMessage, OrderProposal, Product } from "@/lib/types";
+import { useFavorites } from "@/hooks/useFavorites";
+import type { Product, OrderProposal, ChatMessage } from "@/lib/types";
 
-// Category display metadata
-const categoryTitles: Record<string, { title: string; subtitle: string; emoji: string }> = {
-    carnes: { title: "Carnicería IA", subtitle: "Pídele lo que necesites", emoji: "🥩" },
-    charcutería: { title: "Charcutería IA", subtitle: "Embutidos y delicatessen", emoji: "🍖" },
-    preparados: { title: "Preparados IA", subtitle: "Platos listos", emoji: "🍗" },
+const categoryTitles: Record<string, { title: string; emoji: string }> = {
+    carnes: { title: "Carnes", emoji: "🥩" },
+    charcutería: { title: "Charcutería", emoji: "🧀" },
+    preparados: { title: "Preparados", emoji: "🍖" },
 };
 
-interface ChatPageParams {
-    params: Promise<{ category: string }>;
-}
-
-export default function ChatPage({ params }: ChatPageParams) {
+export default function ChatPage({ params }: { params: Promise<{ category: string }> }) {
     const { category } = use(params);
-    const decodedCategory = decodeURIComponent(category);
     const router = useRouter();
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const decodedCategory = decodeURIComponent(category);
+    const catInfo = categoryTitles[decodedCategory.toLowerCase()] || { title: decodedCategory, emoji: "🛒" };
 
-    const meta = categoryTitles[decodedCategory.toLowerCase()] || {
-        title: `${decodedCategory} IA`,
-        subtitle: "Tu asistente inteligente",
-        emoji: "🤖",
-    };
+    const { isFavorite, toggleFavorite } = useFavorites();
 
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: "welcome",
             role: "bot",
-            text: `¡Hola! Soy tu ${meta.title}. ${meta.subtitle}. ¿Qué te pongo hoy?`,
+            text: `¡Hola! Soy tu carnicero virtual ${catInfo.emoji}. ¿Qué te gustaría pedir hoy de ${catInfo.title.toLowerCase()}?`,
             timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
         },
     ]);
-    const [inputText, setInputText] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [isConfirming, setIsConfirming] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
-    const [voiceProcessing, setVoiceProcessing] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Voice recording hook
-    const { isRecording, toggleRecording } = useGeminiRecorder();
+    const { isRecording, isProcessing, toggleRecording } = useGeminiRecorder();
+
+    const handleToggleRecording = async () => {
+        const result = await toggleRecording();
+        if (result?.text) {
+            setInput(result.text);
+            handleSend(result.text);
+        }
+    };
 
     useEffect(() => {
-        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const addUserMessage = (text: string) => {
-        const msg: ChatMessage = {
-            id: Date.now().toString(),
+    const handleSend = async (text?: string) => {
+        const msg = text || input;
+        if (!msg.trim() || loading) return;
+
+        const userMessage: ChatMessage = {
+            id: `user-${Date.now()}`,
             role: "user",
-            text,
+            text: msg.trim(),
             timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
         };
-        setMessages((prev) => [...prev, msg]);
-    };
+        setMessages((prev) => [...prev, userMessage]);
+        setInput("");
+        setLoading(true);
 
-    const addBotMessage = (text: string, orderProposal?: OrderProposal, product?: Product) => {
-        const msg: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: "bot",
-            text,
-            timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-            orderProposal,
-            product,
-        };
-        setMessages((prev) => [...prev, msg]);
-    };
-
-    const sendToAI = async (userMessage: string) => {
-        setIsLoading(true);
         try {
-            // Build conversation history (last 10 messages)
-            // Bot messages must be wrapped as JSON to match the expected response format
-            const history = messages.slice(-10).map((m) => ({
-                role: m.role === "bot" ? "model" : "user",
-                text: m.role === "bot"
-                    ? JSON.stringify({ reply: m.text, suggestedProducts: [], orderProposal: null })
-                    : m.text,
-            }));
-
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    message: userMessage,
+                    message: msg.trim(),
                     category: decodedCategory,
-                    conversationHistory: history,
+                    history: messages.map((m) => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
                 }),
             });
 
             const data = await res.json();
 
-            if (data.error) {
-                addBotMessage("Lo siento, hubo un error. ¿Puedes repetir?");
-            } else {
-                addBotMessage(data.reply, data.orderProposal || undefined);
-                if (data.suggestedProducts?.length) {
-                    setSuggestedProducts(data.suggestedProducts);
-                }
-            }
+            const botMessage: ChatMessage = {
+                id: `bot-${Date.now()}`,
+                role: "bot",
+                text: data.reply || "Lo siento, no pude procesar tu solicitud.",
+                timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+            };
+
+            if (data.product) botMessage.product = data.product;
+            if (data.orderProposal) botMessage.orderProposal = data.orderProposal;
+            if (Array.isArray(data.suggestedProducts)) setSuggestedProducts(data.suggestedProducts);
+
+            setMessages((prev) => [...prev, botMessage]);
         } catch {
-            addBotMessage("Error de conexión. Intenta de nuevo.");
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: `err-${Date.now()}`,
+                    role: "bot" as const,
+                    text: "Ha ocurrido un error. Por favor, intenta de nuevo.",
+                    timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+                },
+            ]);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
-    const handleMicToggle = async () => {
-        if (isLoading || voiceProcessing) return;
-
-        if (isRecording) {
-            // Stop & transcribe
-            setVoiceProcessing(true);
-            try {
-                const result = await toggleRecording();
-                if (result?.text && result.text.trim().length > 0) {
-                    addUserMessage(result.text);
-                    await sendToAI(result.text);
-                }
-            } finally {
-                setVoiceProcessing(false);
-            }
-        } else {
-            // Start recording
-            await toggleRecording();
-        }
-    };
-
-    const handleSend = () => {
-        const text = inputText.trim();
-        if (!text || isLoading) return;
-        setInputText("");
-        addUserMessage(text);
-        sendToAI(text);
-    };
-
-    const handleConfirmOrder = async (proposal: OrderProposal) => {
-        setIsLoading(true);
+    const handleConfirmOrder = async (proposal: OrderProposal, messageId: string) => {
+        if (isConfirming) return;
+        setIsConfirming(true);
         try {
-            const res = await fetch("/api/chat", {
+            const res = await fetch("/api/orders", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    action: "confirm_order",
-                    orderItems: proposal.items,
+                    items: proposal.items,
+                    totalAmount: String(proposal.total),
+                    notes: "",
+                    estimatedMinutes: proposal.estimatedMinutes,
                 }),
             });
-            const data = await res.json();
-            if (data.success) {
-                addBotMessage(data.reply || `¡Pedido confirmado! 🎉 Tu número es ${data.order?.orderNumber}. Estará listo en ~${proposal.estimatedMinutes} minutos.`);
-            } else {
-                addBotMessage("Hubo un error al crear el pedido. Intenta de nuevo.");
+
+            if (res.ok) {
+                const data = await res.json();
+                const orderNumber = data.order?.orderNumber || data.orderNumber || "N/A";
+
+                // Update the specific message to show confirmed state
+                setMessages((prev) => prev.map(msg =>
+                    msg.id === messageId ? { ...msg, isOrderConfirmed: true } : msg
+                ));
+
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `confirm-${Date.now()}`,
+                        role: "bot" as const,
+                        text: `✅ ¡Pedido confirmado! Tu número es #${orderNumber.slice(-6)}. Puedes ver su estado en "Mis Pedidos".`,
+                        timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+                    },
+                ]);
+                if (typeof window !== "undefined" && (window as any).__addToast) {
+                    (window as any).__addToast("Pedido confirmado 🎉", "success");
+                }
             }
         } catch {
-            addBotMessage("Error de conexión al confirmar. Intenta de nuevo.");
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: `orderr-${Date.now()}`,
+                    role: "bot" as const,
+                    text: "Error al crear el pedido. Intenta de nuevo.",
+                    timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+                },
+            ]);
         } finally {
-            setIsLoading(false);
+            setIsConfirming(false);
         }
     };
 
     const handleCancelOrder = () => {
-        addBotMessage("Sin problema, he cancelado la propuesta. ¿Necesitas algo más?");
+        setMessages((prev) => [
+            ...prev,
+            {
+                id: `cancel-${Date.now()}`,
+                role: "bot" as const,
+                text: "Sin problema, he cancelado el pedido. ¿Te puedo ayudar con otra cosa?",
+                timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+            },
+        ]);
     };
 
-    const handleSuggestionClick = (name: string) => {
-        const text = `Quiero ${name}`;
-        addUserMessage(text);
-        sendToAI(text);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
+    const handleSelectSuggestion = (product: Product) => {
+        handleSend(`Quiero ${product.name}`);
     };
 
     return (
-        <div className="relative mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden bg-background-light shadow-2xl sm:rounded-[32px] sm:my-8 sm:border sm:border-gray-200">
+        <div className="flex flex-col h-dvh bg-background-light max-w-lg mx-auto">
             {/* Header */}
-            <header className="z-20 bg-white/95 backdrop-blur-md px-4 pt-12 pb-3 shadow-sm shrink-0 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => router.push("/")}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-[20px] text-text-main">arrow_back</span>
-                    </button>
-                    <div className="flex items-center gap-3 flex-1">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/30">
-                            <span className="text-xl">{meta.emoji}</span>
-                        </div>
-                        <div>
-                            <h1 className="text-sm font-bold text-text-main">{meta.title}</h1>
-                            <div className="flex items-center gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                                <span className="text-[11px] text-text-secondary">En línea</span>
-                            </div>
-                        </div>
+            <header className="relative flex items-center gap-3 px-4 py-3 glass border-b border-gray-200/40 z-10">
+                <button
+                    onClick={() => router.push("/")}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-background-light hover:bg-gray-100 transition-colors active:scale-95"
+                >
+                    <span className="material-symbols-outlined text-text-main text-[20px]">arrow_back</span>
+                </button>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl">{catInfo.emoji}</span>
+                        <h1 className="text-base font-bold text-text-main truncate">{catInfo.title}</h1>
                     </div>
-                    <button className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                        <span className="material-symbols-outlined text-[20px] text-text-main">more_vert</span>
-                    </button>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span className="text-[11px] text-text-secondary font-medium">Carnicero IA activo</span>
+                    </div>
                 </div>
+                <button
+                    onClick={() => router.push("/orders")}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-background-light hover:bg-gray-100 transition-colors active:scale-95"
+                >
+                    <span className="material-symbols-outlined text-text-main text-[20px]">receipt_long</span>
+                </button>
             </header>
 
             {/* Messages */}
-            <main ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-background-light">
-                {messages.map((msg) => (
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+                {messages.map((msg, i) => (
                     <ChatBubble
-                        key={msg.id}
+                        key={i} // ideally use msg.id but sometimes simple mapping is used, keeping as is
                         role={msg.role}
                         text={msg.text}
                         timestamp={msg.timestamp}
                         product={msg.product}
                         orderProposal={msg.orderProposal}
-                        onConfirmOrder={handleConfirmOrder}
+                        onConfirmOrder={(proposal) => handleConfirmOrder(proposal, msg.id)}
                         onCancelOrder={handleCancelOrder}
+                        isConfirming={isConfirming}
+                        isOrderConfirmed={msg.isOrderConfirmed}
+                        isFavorite={msg.product ? isFavorite(msg.product.id) : false}
+                        onToggleFavorite={msg.product ? () => toggleFavorite(msg.product!) : undefined}
                     />
                 ))}
 
-                {isLoading && (
-                    <div className="flex items-end gap-3">
-                        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <span className="text-sm">{meta.emoji}</span>
-                        </div>
-                        <div className="rounded-2xl rounded-tl-none bg-white p-4 shadow-sm border border-gray-100">
-                            <div className="flex gap-1.5">
-                                <span className="h-2 w-2 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "0ms" }} />
-                                <span className="h-2 w-2 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "150ms" }} />
-                                <span className="h-2 w-2 rounded-full bg-gray-300 animate-bounce" style={{ animationDelay: "300ms" }} />
-                            </div>
+                {loading && (
+                    <div className="flex items-center gap-2 text-text-secondary px-2">
+                        <div className="flex gap-1">
+                            <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="h-2 w-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
                         </div>
                     </div>
                 )}
-            </main>
+                <div ref={scrollRef} />
+            </div>
 
             {/* Quick Suggestions */}
             {suggestedProducts.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-2 bg-white/80 backdrop-blur-sm border-t border-gray-50">
-                    {suggestedProducts.map((p) => (
-                        <button
-                            key={p.id}
-                            onClick={() => handleSuggestionClick(p.name)}
-                            className="flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm transition-transform active:scale-95 hover:border-primary/40"
-                        >
-                            <span className="text-xs font-semibold text-text-main">{p.name}</span>
-                            <span className="text-[11px] text-text-secondary">{p.price}€</span>
-                        </button>
-                    ))}
+                <div className="px-4 pb-1 border-t border-gray-100/60">
+                    <QuickSuggestions products={suggestedProducts} onSelect={handleSelectSuggestion} />
                 </div>
             )}
 
-            {/* Input Area */}
-            <div className="z-30 flex items-center gap-2 bg-white px-3 py-3 border-t border-gray-100 pb-safe">
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Escribe tu pedido..."
-                    className="flex-1 rounded-full bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-text-main placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
-                    disabled={isLoading}
-                />
-                {inputText.trim() ? (
-                    <button
-                        onClick={handleSend}
-                        disabled={isLoading}
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary shadow-soft transition-all active:scale-90 hover:brightness-105 disabled:opacity-50"
-                    >
-                        <span className="material-symbols-outlined text-[22px] text-text-main">send</span>
-                    </button>
-                ) : (
+            {/* Input area */}
+            <div className="px-4 py-3 glass border-t border-gray-200/40">
+                <div className="flex items-end gap-3">
+                    <div className="flex-1 flex items-center gap-2 rounded-2xl bg-background-light border border-gray-100/80 px-4 py-2.5">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            placeholder="Escribe tu pedido..."
+                            className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-secondary/50 outline-none"
+                        />
+                        <button
+                            onClick={() => handleSend()}
+                            disabled={!input.trim() || loading}
+                            className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-background-dark disabled:opacity-30 shadow-soft hover:brightness-110 transition-all active:scale-90"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">send</span>
+                        </button>
+                    </div>
                     <MicButton
                         isRecording={isRecording}
-                        isProcessing={voiceProcessing}
-                        onToggle={handleMicToggle}
+                        isProcessing={isProcessing}
+                        onClick={handleToggleRecording}
                     />
-                )}
+                </div>
             </div>
         </div>
     );
