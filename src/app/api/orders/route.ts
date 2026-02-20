@@ -30,6 +30,11 @@ export async function POST(req: Request) {
 
         const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+        // Build descriptive notes from items
+        const notesText = items
+            .map((item: any) => `${item.name || "Producto"}: ${item.qty || "1"} (${item.subtotal || item.unitPrice || "0"}€)`)
+            .join(", ");
+
         const [newOrder] = await db
             .insert(orders)
             .values({
@@ -38,7 +43,9 @@ export async function POST(req: Request) {
                 status: "pending",
                 totalAmount: totalAmount.toString(),
                 priority: "normal",
-                estimatedMinutes: 15,
+                estimatedMinutes: body.estimatedMinutes || 15,
+                notes: notesText,
+                items: items, // Save items snapshot for display
             })
             .returning();
 

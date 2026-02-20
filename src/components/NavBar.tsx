@@ -29,14 +29,16 @@ export default function NavBar({ variant = "customer" }: { variant?: "customer" 
 
     return (
         <nav className={`fixed bottom-0 left-0 right-0 z-40 safe-area-bottom ${variant === "staff"
-                ? "bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
-                : "glass dark:glass-dark"
+            ? "bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+            : "glass dark:glass-dark"
             }`}>
             <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2">
                 {items.map((item) => {
                     const isActive = item.href === "/"
                         ? pathname === "/"
-                        : pathname.startsWith(item.href);
+                        : item.href === "/dashboard"
+                            ? pathname === "/dashboard"
+                            : pathname.startsWith(item.href);
 
                     return (
                         <Link
@@ -46,19 +48,31 @@ export default function NavBar({ variant = "customer" }: { variant?: "customer" 
                         >
                             <div
                                 className={`flex items-center justify-center h-8 w-8 rounded-xl transition-all ${isActive
-                                    ? "bg-primary/15 scale-110"
-                                    : "hover:bg-white/5"
+                                    ? variant === "staff"
+                                        ? "bg-primary/10 scale-110"
+                                        : "bg-primary/15 scale-110"
+                                    : variant === "staff"
+                                        ? "hover:bg-gray-100"
+                                        : "hover:bg-white/5"
                                     }`}
                             >
                                 <span
-                                    className={`material-symbols-outlined text-[22px] transition-colors ${isActive ? "text-primary filled" : "text-gray-400"
+                                    className={`material-symbols-outlined text-[22px] transition-colors ${isActive
+                                        ? "text-primary filled"
+                                        : variant === "staff"
+                                            ? "text-gray-400"
+                                            : "text-gray-400"
                                         }`}
                                 >
                                     {item.icon}
                                 </span>
                             </div>
                             <span
-                                className={`text-[10px] font-bold transition-colors ${isActive ? "text-primary" : "text-gray-400"
+                                className={`text-[10px] font-bold transition-colors ${isActive
+                                    ? "text-primary"
+                                    : variant === "staff"
+                                        ? "text-gray-400"
+                                        : "text-gray-400"
                                     }`}
                             >
                                 {item.label}

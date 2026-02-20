@@ -9,8 +9,11 @@ interface InventoryItemProps {
 }
 
 export default function InventoryItem({ product, onToggleStock, onEdit }: InventoryItemProps) {
+    const taxLabel = product.taxType === "exento" ? "Exento" : "IVA 16%";
+    const taxColor = product.taxType === "exento" ? "text-amber-600 bg-amber-50" : "text-emerald-600 bg-emerald-50";
+
     return (
-        <div className="relative bg-surface-dark rounded-2xl p-4 border border-white/5 overflow-hidden">
+        <div className="relative bg-white rounded-2xl p-4 border border-gray-200 overflow-hidden shadow-sm">
             {/* Gradient accent */}
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/30 rounded-l-2xl" />
 
@@ -18,14 +21,19 @@ export default function InventoryItem({ product, onToggleStock, onEdit }: Invent
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-extrabold text-white truncate">{product.name}</h3>
+                        <h3 className="text-sm font-extrabold text-gray-900 truncate">{product.name}</h3>
                         {product.sku && (
-                            <span className="text-[10px] font-medium text-gray-500 bg-white/5 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
                                 {product.sku}
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-gray-400 capitalize mt-0.5">{product.category}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-xs text-gray-400 capitalize">{product.category}</p>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${taxColor}`}>
+                            {taxLabel}
+                        </span>
+                    </div>
 
                     {/* Prices */}
                     <div className="flex items-baseline gap-2 mt-1">
@@ -44,9 +52,9 @@ export default function InventoryItem({ product, onToggleStock, onEdit }: Invent
                 {onEdit && (
                     <button
                         onClick={() => onEdit(product)}
-                        className="h-8 w-8 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors shrink-0"
+                        className="h-8 w-8 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
                     >
-                        <span className="material-symbols-outlined text-gray-400 text-[18px]">edit</span>
+                        <span className="material-symbols-outlined text-gray-500 text-[18px]">edit</span>
                     </button>
                 )}
 
@@ -54,8 +62,8 @@ export default function InventoryItem({ product, onToggleStock, onEdit }: Invent
                 <button
                     onClick={() => onToggleStock(product.id, !product.inStock)}
                     className={`relative w-11 h-6 rounded-full transition-all shrink-0 ${product.inStock
-                        ? "bg-primary shadow-glow"
-                        : "bg-gray-700"
+                        ? "bg-primary shadow-soft"
+                        : "bg-gray-300"
                         }`}
                 >
                     <div

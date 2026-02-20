@@ -44,6 +44,7 @@ export const products = pgTable("products", {
     sku: varchar("sku", { length: 50 }),
     location: varchar("location", { length: 100 }),
     inStock: boolean("in_stock").default(true),
+    taxType: varchar("tax_type", { length: 20 }).default("gravado"),
     createdAt: timestamp("created_at").defaultNow(),
 });
 

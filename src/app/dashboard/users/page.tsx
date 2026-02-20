@@ -61,21 +61,21 @@ export default function UsersPage() {
 
     if (loading || fetching) {
         return (
-            <div className="flex items-center justify-center min-h-dvh bg-background-dark">
-                <span className="material-symbols-outlined text-primary/40 text-[48px] animate-spin">progress_activity</span>
+            <div className="flex items-center justify-center min-h-dvh bg-[#f3f6f4]">
+                <span className="material-symbols-outlined text-primary/50 text-[48px] animate-spin">progress_activity</span>
             </div>
         );
     }
 
     return (
-        <div className="min-h-dvh bg-background-dark pb-24">
+        <div className="min-h-dvh bg-[#f3f6f4] pb-24">
             {/* Header */}
             <div className="px-5 pt-14 pb-6">
                 <div className="flex items-center gap-3 mb-1">
-                    <Link href="/dashboard/settings" className="h-9 w-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined text-gray-400 text-[20px]">arrow_back</span>
+                    <Link href="/dashboard/settings" className="h-9 w-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+                        <span className="material-symbols-outlined text-gray-500 text-[20px]">arrow_back</span>
                     </Link>
-                    <h1 className="text-xl font-extrabold text-white">Usuarios</h1>
+                    <h1 className="text-xl font-extrabold text-gray-900">Usuarios</h1>
                 </div>
                 <p className="text-sm text-gray-400 ml-12">Gestionar roles de usuario</p>
             </div>
@@ -85,13 +85,13 @@ export default function UsersPage() {
                 {users.map((u) => (
                     <div
                         key={u.id}
-                        className="bg-surface-dark border border-white/5 rounded-2xl p-4 flex items-center gap-4"
+                        className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4 shadow-sm"
                     >
-                        <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-primary text-[20px]">person</span>
+                        <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-emerald-600 text-[20px]">person</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{u.name}</p>
+                            <p className="text-sm font-bold text-gray-900 truncate">{u.name}</p>
                             <p className="text-xs text-gray-400 truncate">{u.email}</p>
                         </div>
                         <select
@@ -99,10 +99,10 @@ export default function UsersPage() {
                             onChange={(e) => changeRole(u.id, e.target.value)}
                             disabled={u.id === user?.id}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all focus:outline-none ${u.role === "admin"
-                                ? "bg-primary/15 border-primary/30 text-primary"
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                                 : u.role === "staff"
-                                    ? "bg-blue-500/15 border-blue-500/30 text-blue-400"
-                                    : "bg-white/5 border-white/10 text-gray-300"
+                                    ? "bg-blue-50 border-blue-200 text-blue-500"
+                                    : "bg-gray-50 border-gray-200 text-gray-500"
                                 } disabled:opacity-40`}
                         >
                             <option value="cliente">Cliente</option>

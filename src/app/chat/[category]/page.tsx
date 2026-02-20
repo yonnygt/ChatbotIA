@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, use } from "react";
+import { useState, useRef, useEffect, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ChatBubble from "@/components/ChatBubble";
 import QuickSuggestions from "@/components/QuickSuggestions";
 import MicButton from "@/components/MicButton";
 import { useGeminiRecorder } from "@/hooks/useGeminiRecorder";
 import { useFavorites } from "@/hooks/useFavorites";
-import type { Product, OrderProposal, ChatMessage } from "@/lib/types";
+import type { Product, OrderProposal, OrderProposalItem, ChatMessage } from "@/lib/types";
 
 const categoryTitles: Record<string, { title: string; emoji: string }> = {
     carnes: { title: "Carnes", emoji: "🥩" },
@@ -35,6 +35,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
     const [loading, setLoading] = useState(false);
     const [isConfirming, setIsConfirming] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+    const [currentCart, setCurrentCart] = useState<OrderProposalItem[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const { isRecording, isProcessing, toggleRecording } = useGeminiRecorder();
@@ -51,7 +52,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
         scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    const handleSend = async (text?: string) => {
+    const handleSend = useCallback(async (text?: string) => {
         const msg = text || input;
         if (!msg.trim() || loading) return;
 
@@ -66,13 +67,22 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
         setLoading(true);
 
         try {
+            // Build clean history for the AI (no injected context needed)
+            const history = messages
+                .filter((m) => m.id !== "welcome")
+                .map((m) => ({
+                    role: m.role === "bot" ? "assistant" : "user",
+                    content: m.text,
+                }));
+
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: msg.trim(),
                     category: decodedCategory,
-                    history: messages.map((m) => ({ role: m.role === "bot" ? "assistant" : "user", content: m.text })),
+                    history,
+                    currentCart, // Send the accumulated cart to the AI
                 }),
             });
 
@@ -85,8 +95,18 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                 timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
             };
 
+            // Update cart state from AI response
+            if (data.orderProposal && data.orderProposal.items && data.orderProposal.items.length > 0) {
+                setCurrentCart(data.orderProposal.items);
+                botMessage.orderProposal = data.orderProposal;
+                botMessage.showConfirmation = data.showConfirmation === true;
+            } else if (data.orderProposal === null) {
+                // AI explicitly cleared the cart (e.g., user said "cancel" or "nothing")
+                // Only clear if the AI explicitly returned null
+                // Keep current cart if AI just didn't mention it
+            }
+
             if (data.product) botMessage.product = data.product;
-            if (data.orderProposal) botMessage.orderProposal = data.orderProposal;
             if (Array.isArray(data.suggestedProducts)) setSuggestedProducts(data.suggestedProducts);
 
             setMessages((prev) => [...prev, botMessage]);
@@ -103,7 +123,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
         } finally {
             setLoading(false);
         }
-    };
+    }, [input, loading, messages, decodedCategory, currentCart]);
 
     const handleConfirmOrder = async (proposal: OrderProposal, messageId: string) => {
         if (isConfirming) return;
@@ -124,11 +144,12 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                 const data = await res.json();
                 const orderNumber = data.order?.orderNumber || data.orderNumber || "N/A";
 
-                // Update the specific message to show confirmed state
+                // Mark the message as confirmed
                 setMessages((prev) => prev.map(msg =>
                     msg.id === messageId ? { ...msg, isOrderConfirmed: true } : msg
                 ));
 
+                // Add success message
                 setMessages((prev) => [
                     ...prev,
                     {
@@ -138,9 +159,25 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                         timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
                     },
                 ]);
+
+                // Clear the cart after successful order
+                setCurrentCart([]);
+
                 if (typeof window !== "undefined" && (window as any).__addToast) {
                     (window as any).__addToast("Pedido confirmado 🎉", "success");
                 }
+            } else {
+                const errorData = await res.json().catch(() => null);
+                console.error("Order creation failed:", errorData);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `orderr-${Date.now()}`,
+                        role: "bot" as const,
+                        text: "Error al crear el pedido. Intenta de nuevo.",
+                        timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+                    },
+                ]);
             }
         } catch {
             setMessages((prev) => [
@@ -158,6 +195,9 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
     };
 
     const handleCancelOrder = () => {
+        // Clear the cart
+        setCurrentCart([]);
+
         setMessages((prev) => [
             ...prev,
             {
@@ -190,7 +230,11 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        <span className="text-[11px] text-text-secondary font-medium">Carnicero IA activo</span>
+                        <span className="text-[11px] text-text-secondary font-medium">
+                            {currentCart.length > 0
+                                ? `${currentCart.length} producto${currentCart.length > 1 ? "s" : ""} en el pedido`
+                                : "Carnicero IA activo"}
+                        </span>
                     </div>
                 </div>
                 <button
@@ -203,14 +247,15 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-                {messages.map((msg, i) => (
+                {messages.map((msg) => (
                     <ChatBubble
-                        key={i} // ideally use msg.id but sometimes simple mapping is used, keeping as is
+                        key={msg.id}
                         role={msg.role}
                         text={msg.text}
                         timestamp={msg.timestamp}
                         product={msg.product}
                         orderProposal={msg.orderProposal}
+                        showConfirmation={msg.showConfirmation}
                         onConfirmOrder={(proposal) => handleConfirmOrder(proposal, msg.id)}
                         onCancelOrder={handleCancelOrder}
                         isConfirming={isConfirming}

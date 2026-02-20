@@ -7,6 +7,7 @@ const API_AUTH_PREFIX = "/api/auth";
 export function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
     const token = req.cookies.get("session_token")?.value;
+    const userRole = req.cookies.get("user_role")?.value;
 
     // Allow public API auth routes
     if (pathname.startsWith(API_AUTH_PREFIX)) {
@@ -23,7 +24,7 @@ export function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // Public paths: redirect to home if already logged in
+    // Public paths: allow through
     if (PUBLIC_PATHS.includes(pathname)) {
         return NextResponse.next();
     }
@@ -33,6 +34,16 @@ export function middleware(req: NextRequest) {
         const loginUrl = req.nextUrl.clone();
         loginUrl.pathname = "/login";
         return NextResponse.redirect(loginUrl);
+    }
+
+    // Staff paths: require staff or admin role
+    const isStaffPath = STAFF_PATHS.some((p) => pathname.startsWith(p));
+    if (isStaffPath) {
+        if (!userRole || userRole === "cliente") {
+            const homeUrl = req.nextUrl.clone();
+            homeUrl.pathname = "/";
+            return NextResponse.redirect(homeUrl);
+        }
     }
 
     return NextResponse.next();

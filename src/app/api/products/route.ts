@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { name, description, category, price, unit, imageUrl, sku, location, inStock } = body;
+        const { name, description, category, price, unit, imageUrl, sku, location, inStock, taxType } = body;
 
         if (!name || !category || !price) {
             return NextResponse.json(
@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
                 sku: sku || null,
                 location: location || null,
                 inStock: inStock !== undefined ? inStock : true,
+                taxType: taxType || "gravado",
             })
             .returning();
 
@@ -76,6 +77,7 @@ export async function PATCH(req: NextRequest) {
         if (updates.sku !== undefined) allowedFields.sku = updates.sku;
         if (updates.location !== undefined) allowedFields.location = updates.location;
         if (updates.inStock !== undefined) allowedFields.inStock = updates.inStock;
+        if (updates.taxType !== undefined) allowedFields.taxType = updates.taxType;
 
         if (Object.keys(allowedFields).length === 0) {
             return NextResponse.json({ error: "No hay campos para actualizar" }, { status: 400 });

@@ -55,6 +55,14 @@ export async function POST(req: NextRequest) {
             maxAge: 30 * 24 * 60 * 60,
         });
 
+        response.cookies.set("user_role", user.role, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 30 * 24 * 60 * 60,
+        });
+
         return response;
     } catch (error) {
         console.error("Login error:", error);

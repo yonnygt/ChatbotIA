@@ -55,12 +55,12 @@
   color-scheme: light;
 }
 
-/* Staff Theme (Dark) */
+/* Staff Theme (Light) */
 .theme-staff {
-  --bg-page: #102216;
-  --text-page: #d0e8d6;
-  --surface-card: #1c3324;
-  color-scheme: dark;
+  --bg-page: #f3f6f4;
+  --text-page: #1a2e23;
+  --surface-card: #ffffff;
+  color-scheme: light;
 }
 
 body {

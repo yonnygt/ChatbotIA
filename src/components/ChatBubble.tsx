@@ -13,6 +13,7 @@ interface ChatBubbleProps {
     readonly onCancelOrder?: () => void;
     readonly isConfirming?: boolean;
     readonly isOrderConfirmed?: boolean;
+    readonly showConfirmation?: boolean;
     readonly isFavorite?: boolean;
     readonly onToggleFavorite?: () => void;
 }
@@ -28,6 +29,7 @@ export default function ChatBubble({
     onCancelOrder,
     isConfirming = false,
     isOrderConfirmed = false,
+    showConfirmation,
     isFavorite = false,
     onToggleFavorite,
 }: ChatBubbleProps) {
@@ -98,8 +100,32 @@ export default function ChatBubble({
                         </div>
                     )}
 
-                    {/* Order Proposal — chat-style confirmation */}
-                    {orderProposal && (
+                    {/* Partial order summary (no confirm buttons — user is still adding items) */}
+                    {orderProposal && !showConfirmation && !isOrderConfirmed && (
+                        <div className="mt-2 overflow-hidden rounded-xl border border-primary/10 bg-primary-light/15">
+                            <div className="p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="material-symbols-outlined text-primary/70 text-[16px]">shopping_cart</span>
+                                    <h4 className="font-semibold text-xs text-text-secondary">Tu pedido hasta ahora</h4>
+                                </div>
+                                <div className="space-y-1">
+                                    {orderProposal.items.map((item, i) => (
+                                        <div key={i} className="flex justify-between text-xs">
+                                            <span className="text-text-main">{item.name} × {item.qty}</span>
+                                            <span className="text-text-secondary font-medium">{item.subtotal}€</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-2 pt-2 border-t border-primary/10 flex justify-between text-xs">
+                                    <span className="text-text-secondary font-medium">Subtotal</span>
+                                    <span className="font-bold text-text-main">{orderProposal.total}€</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Full order confirmation card (with confirm/cancel buttons) */}
+                    {orderProposal && showConfirmation && (
                         <div className="mt-2 overflow-hidden rounded-xl border border-primary/20 bg-primary-light/30">
                             <div className="p-3 border-b border-primary/10">
                                 <div className="flex items-center gap-2 mb-2">

@@ -20,6 +20,7 @@ export interface Product {
     sku: string | null;
     location: string | null;
     inStock: boolean | null;
+    taxType: string | null;
 }
 
 export interface ChatMessage {
@@ -30,6 +31,7 @@ export interface ChatMessage {
     product?: Product;
     orderProposal?: OrderProposal;
     isOrderConfirmed?: boolean;
+    showConfirmation?: boolean; // Controls if the order card is displayed
 }
 
 export interface OrderProposal {
