@@ -6,18 +6,18 @@
 
 @theme inline {
   /* — Core Palette — */
-  --color-primary: #13ec5b;
-  --color-primary-dark: #0cc94d;
-  --color-primary-light: #e6fdef;
-  --color-background-light: #f6f8f6;
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: #dbeafe;
+  --color-background-light: #f8fafc;
   --color-background-dark: #102216;
   --color-surface-light: #ffffff;
   --color-surface-dark: #1c3324;
-  --color-surface-highlight: #264a34;
-  --color-text-main: #102216;
-  --color-text-secondary: #4c6b56;
+  --color-surface-highlight: #e2e8f0;
+  --color-text-main: #1e293b;
+  --color-text-secondary: #64748b;
   --color-text-inverse: #ffffff;
-  --color-text-light: #d0e8d6;
+  --color-text-light: #cbd5e1;
 
   /* — Typography — */
   --font-display: "Plus Jakarta Sans", sans-serif;
@@ -49,8 +49,8 @@
 
 /* Base Theme (Customer - Light) */
 :root {
-  --bg-page: #f6f8f6;
-  --text-page: #102216;
+  --bg-page: #f8fafc;
+  --text-page: #1e293b;
   --surface-card: #ffffff;
   color-scheme: light;
 }

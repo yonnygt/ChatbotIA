@@ -70,39 +70,39 @@ export default function LoginPage() {
     if (user) return null;
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-dvh bg-background-dark px-6 relative overflow-hidden">
-            {/* Decorative orbs */}
-            <div className="absolute top-[-100px] left-[-60px] w-[250px] h-[250px] rounded-full bg-primary/20 blur-[100px] pointer-events-none animate-float" />
-            <div className="absolute bottom-[-80px] right-[-40px] w-[200px] h-[200px] rounded-full bg-primary/15 blur-[80px] pointer-events-none" />
+        <div className="flex flex-col items-center justify-center min-h-dvh bg-background-light px-6 relative overflow-hidden">
+            {/* Decorative gradient blob */}
+            <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-primary/8 blur-3xl pointer-events-none -mr-32 -mt-32" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none -ml-32 -mb-32" />
 
-            <div className="w-full max-w-sm relative z-10">
-                {/* Logo */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/15 mb-4">
-                        <span className="material-symbols-outlined text-primary text-[32px] filled">storefront</span>
+            <div className="w-full max-w-md relative z-10">
+                {/* Logo & Header */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-4">
+                        <span className="material-symbols-outlined text-primary text-[28px] filled">storefront</span>
                     </div>
-                    <h1 className="text-3xl font-extrabold text-white">
+                    <h1 className="text-4xl font-bold text-text-main">
                         Butcher<span className="text-primary">AI</span>
                     </h1>
-                    <p className="text-sm text-gray-400 mt-1">Carnicería Inteligente</p>
+                    <p className="text-base text-text-secondary mt-2">Carnicería Inteligente</p>
                 </div>
 
                 {/* Mode tabs */}
-                <div className="flex rounded-2xl bg-surface-dark p-1 mb-6">
+                <div className="flex rounded-lg bg-surface-highlight p-1 mb-8 gap-2">
                     <button
                         onClick={() => { setMode("login"); setError(""); }}
-                        className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${mode === "login"
-                            ? "bg-primary text-background-dark shadow-soft"
-                            : "text-gray-400 hover:text-white"
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${mode === "login"
+                            ? "bg-white text-primary shadow-sm"
+                            : "text-text-secondary hover:text-text-main"
                             }`}
                     >
                         Iniciar Sesión
                     </button>
                     <button
                         onClick={() => { setMode("register"); setError(""); }}
-                        className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${mode === "register"
-                            ? "bg-primary text-background-dark shadow-soft"
-                            : "text-gray-400 hover:text-white"
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-md transition-all ${mode === "register"
+                            ? "bg-white text-primary shadow-sm"
+                            : "text-text-secondary hover:text-text-main"
                             }`}
                     >
                         Registrarse
@@ -110,42 +110,42 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {mode === "register" && (
                         <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Nombre</label>
+                            <label className="text-sm font-semibold text-text-main mb-2 block">Nombre Completo</label>
                             <div className="relative">
-                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">person</span>
+                                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">person</span>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="Tu nombre completo"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-dark border border-white/10 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                    placeholder="Juan Pérez"
+                                    className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-surface-light border border-gray-200 text-text-main text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                                 />
                             </div>
                         </div>
                     )}
 
                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Email</label>
+                        <label className="text-sm font-semibold text-text-main mb-2 block">Email</label>
                         <div className="relative">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">mail</span>
+                            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">mail</span>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="tu@email.com"
+                                placeholder="correo@ejemplo.com"
                                 required
-                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-dark border border-white/10 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-surface-light border border-gray-200 text-text-main text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Contraseña</label>
+                        <label className="text-sm font-semibold text-text-main mb-2 block">Contraseña</label>
                         <div className="relative">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-[20px]">lock</span>
+                            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">lock</span>
                             <input
                                 type="password"
                                 value={password}
@@ -153,25 +153,25 @@ export default function LoginPage() {
                                 placeholder="••••••••"
                                 required
                                 minLength={6}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface-dark border border-white/10 text-white text-sm placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                                className="w-full pl-11 pr-4 py-2.5 rounded-lg bg-surface-light border border-gray-200 text-text-main text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                             />
                         </div>
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 bg-red-500/15 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl p-3">
-                            <span className="material-symbols-outlined text-[16px]">error</span>
-                            {error}
+                        <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg p-3">
+                            <span className="material-symbols-outlined text-[18px] flex-shrink-0">error</span>
+                            <span>{error}</span>
                         </div>
                     )}
 
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full py-3.5 rounded-xl bg-primary text-background-dark font-bold text-sm shadow-glow hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary-dark active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {submitting ? (
-                            <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                            <span className="material-symbols-outlined text-[18px] animate-spin inline">progress_activity</span>
                         ) : mode === "login" ? (
                             "Entrar"
                         ) : (
@@ -180,11 +180,11 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <p className="text-center text-xs text-gray-600 mt-6">
+                <p className="text-center text-sm text-text-secondary mt-6">
                     {mode === "login" ? "¿No tienes cuenta? " : "¿Ya tienes cuenta? "}
                     <button
                         onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
-                        className="text-primary font-bold hover:underline"
+                        className="text-primary font-semibold hover:text-primary-dark transition-colors"
                     >
                         {mode === "login" ? "Regístrate" : "Inicia sesión"}
                     </button>
