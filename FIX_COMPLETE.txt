@@ -1,0 +1,5 @@
+CRITICAL FIX APPLIED: Backend now correctly reads conversation history (was failing due to property name mismatch 'text' vs 'content').
+This restores the AI's memory and fixes the 0.00€ empty order issue.
+
+Please verify by ordering multiple items and then confirming.
+Check walkthrough.md for details.
