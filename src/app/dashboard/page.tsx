@@ -64,7 +64,7 @@ export default function DashboardPage() {
         { key: "ready", label: "Listos", icon: "check_circle" },
     ];
 
-    const activeOrders = orders.filter((o) => o.status !== "completed");
+    const activeOrders = filter === "all" ? orders : orders.filter((o) => o.status !== "completed");
     const filteredOrders = filter === "all" ? activeOrders : activeOrders.filter((o) => o.status === filter);
 
     const counts = {

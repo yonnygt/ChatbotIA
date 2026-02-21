@@ -11,23 +11,25 @@ export default function DashboardLayout({
 }) {
     const { user, loading, fetchUser } = useAuth();
     const router = useRouter();
-    const [checked, setChecked] = useState(false);
+    const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
-        fetchUser();
+        const checkAuth = async () => {
+            await fetchUser();
+            setIsChecking(false);
+        };
+        checkAuth();
     }, []);
 
     useEffect(() => {
-        if (!loading) {
+        if (!loading && !isChecking) {
             if (!user || user.role === "cliente") {
                 router.replace("/");
-            } else {
-                setChecked(true);
             }
         }
-    }, [user, loading]);
+    }, [user, loading, isChecking, router]);
 
-    if (loading || !checked) {
+    if ((loading && isChecking) || (!user && (loading || isChecking)) || (user && user.role === "cliente")) {
         return (
             <div className="flex items-center justify-center min-h-dvh bg-[#f3f6f4]">
                 <span className="material-symbols-outlined text-primary/50 text-[48px] animate-spin">

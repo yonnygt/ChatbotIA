@@ -6,36 +6,36 @@ import type { User } from "@/lib/types";
 interface AuthState {
     user: User | null;
     loading: boolean;
+    fetchUser: () => Promise<void>;
     setUser: (user: User | null) => void;
     setLoading: (loading: boolean) => void;
 }
 
-const useAuthStore = create<AuthState>((set) => ({
+const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
     loading: true,
     setUser: (user) => set({ user }),
     setLoading: (loading) => set({ loading }),
-}));
-
-export function useAuth() {
-    const { user, loading, setUser, setLoading } = useAuthStore();
-
-    const fetchUser = async () => {
+    fetchUser: async () => {
         try {
-            setLoading(true);
+            set({ loading: true });
             const res = await fetch("/api/auth/me");
             if (res.ok) {
                 const data = await res.json();
-                setUser(data.user);
+                set({ user: data.user });
             } else {
-                setUser(null);
+                set({ user: null });
             }
         } catch {
-            setUser(null);
+            set({ user: null });
         } finally {
-            setLoading(false);
+            set({ loading: false });
         }
-    };
+    },
+}));
+
+export function useAuth() {
+    const { user, loading, fetchUser, setUser, setLoading } = useAuthStore();
 
     const login = async (email: string, password: string) => {
         const res = await fetch("/api/auth/login", {

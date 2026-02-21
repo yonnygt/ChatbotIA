@@ -19,7 +19,7 @@ export default function UsersPage() {
     const [users, setUsers] = useState<UserRow[]>([]);
     const [fetching, setFetching] = useState(true);
 
-    useEffect(() => { fetchUser(); }, []);
+    useEffect(() => { }, []);
 
     useEffect(() => {
         if (!loading && user) {

@@ -17,8 +17,9 @@ export default function SettingsPage() {
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<string | null>(null);
 
-    useEffect(() => { fetchUser(); }, []);
-    useEffect(() => { loadRate(); }, []);
+    useEffect(() => {
+        loadRate();
+    }, []);
 
     const loadRate = async () => {
         try {
