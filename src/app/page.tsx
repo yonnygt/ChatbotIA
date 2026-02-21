@@ -90,22 +90,22 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-dvh bg-background-light">
-      {/* Hero Header */}
-      <header className="relative pt-14 pb-10">
-        {/* Background blobs (contained to avoid overflow on main page, but allows dropdown to overflow header content) */}
-        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-background-dark via-surface-dark to-background-dark pointer-events-none">
-          <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-[80px] animate-float" />
-          <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-primary/15 blur-[60px] animate-float" style={{ animationDelay: "3s" }} />
-          <div className="absolute top-1/2 right-1/4 h-24 w-24 rounded-full bg-primary/10 blur-[40px]" />
+    <div className="flex flex-col min-h-dvh bg-[#f8fafc]">
+      {/* Hero Header with Premium Dark Slate Sync - Fixed overflow to allow dropdown */}
+      <header className="relative pt-16 pb-12 shadow-[0_10px_40px_-15px_rgba(15,23,42,0.3)]">
+        {/* Background Blobs - Synced with Account & Login - Moved overflow here */}
+        <div className="absolute inset-0 bg-[#0f172a] pointer-events-none overflow-hidden">
+          <div className="absolute top-[-20%] right-[-10%] h-[300px] w-[300px] rounded-full bg-primary/20 blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[-10%] left-[-5%] h-[250px] w-[250px] rounded-full bg-emerald-500/10 blur-[80px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-full bg-[#1e293b]/50 skew-y-6" />
         </div>
 
-        <div className="relative z-20 px-6">
-          <div className="flex items-center justify-between mb-8">
+        <div className="relative z-20 px-6 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-10">
             <div>
-              <p className="text-sm font-medium text-primary/80">¡Buenos días! 👋</p>
-              <h1 className="text-3xl font-extrabold text-white mt-1 tracking-tight">
-                Carnicería <span className="text-gradient">IA</span>
+              <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-1.5 opacity-80">BIENVENIDO DE NUEVO 👋</p>
+              <h1 className="text-4xl font-black text-white tracking-tighter leading-none">
+                Carnicería <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">IA</span>
               </h1>
             </div>
 
@@ -114,10 +114,10 @@ export default function HomePage() {
               {outOfStockCount > 0 && (
                 <button
                   onClick={() => setShowOutOfStockModal(true)}
-                  className="relative flex h-12 w-12 items-center justify-center rounded-2xl glass-dark border border-white/10 shadow-lg transition-transform hover:scale-105 active:scale-95"
+                  className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl transition-all hover:bg-white/10 active:scale-90"
                 >
-                  <span className="material-symbols-outlined text-red-400 text-[22px]">production_quantity_limits</span>
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-background-dark text-[10px] font-bold text-white">
+                  <span className="material-symbols-outlined text-red-400 text-[24px]">production_quantity_limits</span>
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-lg bg-red-500 border-2 border-[#0f172a] text-[10px] font-black text-white">
                     {outOfStockCount}
                   </span>
                 </button>
@@ -126,104 +126,99 @@ export default function HomePage() {
               {/* Favorites Badge */}
               <button
                 onClick={() => setShowFavoritesModal(true)}
-                className="relative flex h-12 w-12 items-center justify-center rounded-2xl glass-dark border border-white/10 shadow-lg transition-transform hover:scale-105 active:scale-95"
+                className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl transition-all hover:bg-white/10 active:scale-90"
               >
-                <span className={`material-symbols-outlined text-[22px] ${favorites.length > 0 ? "text-red-400 fill-current" : "text-white"}`}>favorite</span>
+                <span className={`material-symbols-outlined text-[24px] ${favorites.length > 0 ? "text-rose-500 fill-current" : "text-white opacity-80"}`}>favorite</span>
                 {favorites.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-background-dark text-[10px] font-bold text-white">
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-lg bg-emerald-500 border-2 border-[#0f172a] text-[10px] font-black text-white">
                     {favorites.length}
                   </span>
                 )}
               </button>
-
-              {/* Cart Badge (visual only for now) */}
-              <button className="relative flex h-12 w-12 items-center justify-center rounded-2xl glass-dark border border-white/10 shadow-lg transition-transform hover:scale-105 active:scale-95">
-                <span className="material-symbols-outlined text-white text-[22px]">shopping_bag</span>
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-background-dark" />
-              </button>
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div ref={searchRef} className="relative">
-            <div className={`flex items-center gap-3 rounded-2xl glass-dark border border-white/10 p-3 shadow-lg transition-all ${showResults ? 'ring-2 ring-primary/50 bg-surface-dark' : ''}`}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20 text-primary flex-shrink-0">
-                <span className="material-symbols-outlined text-[22px]">search</span>
+          {/* Search Bar - Redesigned with refined glassmorphism */}
+          <div ref={searchRef} className="relative group">
+            <div className={`flex items-center gap-4 rounded-[1.8rem] bg-white/5 backdrop-blur-2xl border border-white/10 p-2 shadow-2xl transition-all duration-500 ${showResults ? 'ring-2 ring-primary/50 bg-white/10' : 'group-hover:bg-white/10 group-hover:border-white/20'}`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-emerald-400 text-[#0f172a] flex-shrink-0 shadow-lg group-focus-within:rotate-12 transition-transform">
+                <span className="material-symbols-outlined text-[24px] filled">search</span>
               </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
-                placeholder="¿Qué necesitas hoy?"
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-text-light/50 outline-none"
+                placeholder="Busca tu corte preferido..."
+                className="flex-1 bg-transparent text-base text-white placeholder:text-slate-500 font-bold outline-none"
               />
               {searchQuery && (
                 <button
                   onClick={() => { setSearchQuery(""); setSearchResults([]); setShowResults(false); }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-white/10 transition-colors mr-1"
                 >
-                  <span className="material-symbols-outlined text-text-light/50 text-[18px]">close</span>
+                  <span className="material-symbols-outlined text-white/50 text-[20px]">close</span>
                 </button>
-              )}
-              {searching && (
-                <span className="material-symbols-outlined text-primary text-[20px] animate-spin">progress_activity</span>
               )}
             </div>
 
-            {/* Search Results Dropdown */}
+            {/* Search Results Dropdown - Full Redesign */}
             {showResults && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-white border border-gray-100 shadow-elevated z-50 max-h-[320px] overflow-y-auto ring-1 ring-black/5">
-                {/* ... existing dropdown content ... */}
+              <div className="absolute top-full left-0 right-0 mt-4 rounded-[2.5rem] bg-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.3)] border border-slate-100 z-50 max-h-[400px] overflow-hidden animate-slide-up">
+                {/* ... dropdown content ... */}
                 {searchResults.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                    <span className="material-symbols-outlined text-gray-300 text-[32px] mb-2">search_off</span>
-                    <p className="text-sm font-medium text-text-main">Sin resultados</p>
-                    <p className="text-xs text-text-secondary mt-1">No encontramos productos que coincidan con &quot;{searchQuery}&quot;</p>
+                  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                    <div className="h-16 w-16 rounded-3xl bg-slate-50 flex items-center justify-center mb-4">
+                      <span className="material-symbols-outlined text-slate-200 text-[40px]">manage_search</span>
+                    </div>
+                    <p className="text-lg font-black text-slate-800 tracking-tight">Sin resultados</p>
+                    <p className="text-xs text-slate-400 font-medium mt-1">Intenta con otro corte o categoría</p>
                   </div>
                 ) : (
                   <div className="py-2">
-                    <p className="px-4 py-1.5 text-[10px] font-bold text-text-secondary uppercase tracking-wider sticky top-0 bg-white/95 backdrop-blur-sm z-10 border-b border-gray-50">
-                      {searchResults.length} resultado{searchResults.length !== 1 ? "s" : ""}
+                    <p className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+                      {searchResults.length} coincidencia{searchResults.length !== 1 ? "s" : ""} encontrada{searchResults.length !== 1 ? "s" : ""}
                     </p>
-                    {searchResults.map((product) => (
-                      <Link
-                        key={product.id}
-                        href={`/chat/${encodeURIComponent(product.category)}`}
-                        onClick={() => setShowResults(false)}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
-                      >
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${product.inStock ? 'bg-primary/10' : 'bg-red-50'}`}>
-                          <span className={`material-symbols-outlined text-[20px] ${product.inStock ? 'text-primary' : 'text-red-400'}`}>
-                            {product.inStock ? "inventory_2" : "inventory"}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold truncate ${product.inStock ? 'text-text-main' : 'text-text-secondary'}`}>{product.name}</p>
-                          <p className="text-[11px] text-text-secondary capitalize">{product.category}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleFavorite(product);
-                            }}
-                            className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <span className={`material-symbols-outlined text-[18px] ${isFavorite(product.id) ? "text-red-500 fill-current" : "text-gray-300"}`}>favorite</span>
-                          </button>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-sm font-extrabold text-primary-dark">
-                              {Number(product.price).toFixed(2)} €
-                            </p>
-                            <p className={`text-[10px] font-bold ${product.inStock ? "text-green-600" : "text-red-500"}`}>
-                              {product.inStock ? "✓ Disponible" : "✗ Agotado"}
-                            </p>
+                    <div className="px-2 space-y-1">
+                      {searchResults.map((product) => (
+                        <Link
+                          key={product.id}
+                          href={`/chat/${encodeURIComponent(product.category)}`}
+                          onClick={() => setShowResults(false)}
+                          className="flex items-center gap-4 px-4 py-4 hover:bg-slate-50 transition-all rounded-[1.8rem] group/item border border-transparent hover:border-slate-100"
+                        >
+                          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl flex-shrink-0 shadow-inner ${product.inStock ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                            <span className={`material-symbols-outlined text-[24px] ${product.inStock ? 'text-emerald-600' : 'text-red-400'}`}>
+                              {product.inStock ? "inventory_2" : "inventory"}
+                            </span>
                           </div>
-                        </div>
-                      </Link>
-                    ))}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-base font-black tracking-tight ${product.inStock ? 'text-slate-800' : 'text-slate-400'}`}>{product.name}</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{product.category}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite(product);
+                              }}
+                              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-rose-50 transition-colors group/fav"
+                            >
+                              <span className={`material-symbols-outlined text-[20px] transition-all group-hover/fav:scale-125 ${isFavorite(product.id) ? "text-rose-500 fill-current animate-bounce-short" : "text-slate-200 group-hover/fav:text-rose-300"}`}>favorite</span>
+                            </button>
+                            <div className="text-right flex flex-col items-end gap-0.5">
+                              <p className="text-base font-black text-emerald-600 tabular-nums">
+                                {Number(product.price).toFixed(2)} €
+                              </p>
+                              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${product.inStock ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-500'}`}>
+                                {product.inStock ? "Stock" : "Agotado"}
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -232,162 +227,56 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Out of Stock Modal */}
-      {showOutOfStockModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowOutOfStockModal(false)}>
-          <div className="w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-red-500 text-[18px]">production_quantity_limits</span>
-                </div>
-                <h3 className="text-base font-bold text-text-main">Productos Agotados</h3>
-              </div>
-              <button onClick={() => setShowOutOfStockModal(false)} className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-                <span className="material-symbols-outlined text-gray-400 text-[20px]">close</span>
-              </button>
-            </div>
-            <div className="max-h-[60vh] overflow-y-auto p-2">
-              {outOfStockProducts.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-sm text-text-secondary">No hay productos agotados actualmente.</p>
-                </div>
-              ) : (
-                outOfStockProducts.map(product => (
-                  <div key={product.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors">
-                    <div className="h-12 w-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover grayscale" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-xl grayscale">🥩</div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-text-main/80">{product.name}</h4>
-                      <p className="text-xs text-text-secondary capitalize">{product.category}</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2.5 py-1 rounded-full border border-red-100">
-                      Agotado
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
-              <p className="text-xs text-text-secondary">Estos productos no están disponibles para ordenar por el momento.</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Main Content with Refined Layout */}
+      <main className="flex-1 px-6 py-10 pb-32 space-y-12 -mt-4 relative z-10">
 
-      {/* Favorites Modal */}
-      {showFavoritesModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowFavoritesModal(false)}>
-          <div className="w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-red-500 text-[18px]">favorite</span>
-                </div>
-                <h3 className="text-base font-bold text-text-main">Mis Favoritos</h3>
-              </div>
-              <button onClick={() => setShowFavoritesModal(false)} className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-                <span className="material-symbols-outlined text-gray-400 text-[20px]">close</span>
-              </button>
-            </div>
-            <div className="max-h-[60vh] overflow-y-auto p-2">
-              {favoriteProducts.length === 0 ? (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-gray-300 text-[48px] mb-2">favorite_border</span>
-                  <p className="text-sm text-text-secondary">No tienes favoritos aún.</p>
-                  <p className="text-xs text-text-secondary/60 mt-1">Dale ❤️ a los productos que te gusten.</p>
-                </div>
-              ) : (
-                favoriteProducts.map(product => (
-                  <Link href={`/chat/${encodeURIComponent(product.category)}`} key={product.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors" onClick={() => setShowFavoritesModal(false)}>
-                    <div className="h-12 w-12 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-xl">🥩</div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-text-main/80">{product.name}</h4>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-text-secondary capitalize">{product.category}</p>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${product.inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                          {product.inStock ? "Stock" : "Agotado"}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleFavorite(product);
-                      }}
-                      className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[20px] text-red-500 fill-current">favorite</span>
-                    </button>
-                  </Link>
-                ))
-              )}
-            </div>
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
-              <p className="text-xs text-text-secondary">Toca un producto para pedirlo.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="flex-1 px-5 py-6 pb-28 space-y-8 -mt-2">
-        {/* Categories Section */}
+        {/* Categories Section - Redesigned Cards */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-text-main">Secciones</h2>
-            <span className="text-xs font-semibold text-primary bg-primary/10 rounded-full px-3 py-1">
-              {categories.length} disponibles
-            </span>
+          <div className="flex items-center justify-between mb-6 px-1">
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Categorías</h2>
+            <div className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                {categories.length} Secciones
+              </span>
+            </div>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-44 rounded-2xl skeleton-shimmer" />
+            <div className="grid grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-52 rounded-[2.5rem] skeleton-shimmer shadow-sm" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {categories.map((cat) => (
                 <Link
                   key={cat.name}
                   href={`/chat/${encodeURIComponent(cat.name)}`}
-                  className="group relative overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100/80 transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-0.5 active:scale-[0.97]"
+                  className="group relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 transition-all duration-500 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 active:scale-95"
                 >
-                  <div className="h-24 w-full overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <div className="h-28 w-full overflow-hidden bg-slate-50 relative">
                     {categoryImages[cat.name.toLowerCase()] ? (
                       <img
                         src={categoryImages[cat.name.toLowerCase()]}
                         alt={cat.name}
-                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                     ) : (
-                      <span className="text-4xl">{cat.emoji}</span>
+                      <div className="h-full w-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-50 to-slate-100">
+                        {cat.emoji}
+                      </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent h-24" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-60" />
                   </div>
-                  <div className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xl">{cat.emoji}</span>
-                      <h3 className="text-sm font-bold text-text-main capitalize">{cat.name}</h3>
+                  <div className="p-4 pt-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
+                        {cat.emoji}
+                      </div>
+                      <h3 className="text-sm font-black text-slate-800 capitalize tracking-tight">{cat.name}</h3>
                     </div>
-                    <p className="text-[11px] text-text-secondary leading-tight">{cat.description}</p>
-                  </div>
-                  <div className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-1">
-                    <span className="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+                    <p className="text-[10px] text-slate-400 font-bold leading-relaxed line-clamp-2 uppercase tracking-tighter">{cat.description}</p>
                   </div>
                 </Link>
               ))}
@@ -395,49 +284,56 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Quick Actions */}
+        {/* Action Menu - Redesigned matching Account page */}
         <section>
-          <h2 className="text-lg font-bold text-text-main mb-4">Acceso Rápido</h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Link href="/orders" className="group flex flex-col items-center gap-2.5 rounded-2xl bg-white p-4 shadow-sm border border-gray-100/80 hover:border-primary/30 hover:shadow-elevated transition-all duration-300 active:scale-95">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 group-hover:from-primary/25 group-hover:to-primary/10 transition-colors duration-300">
-                <span className="material-symbols-outlined text-primary text-[24px]">receipt_long</span>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-6 px-1">Atajos</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <Link href="/orders" className="group flex flex-col items-center gap-3 rounded-[2rem] bg-white p-5 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all duration-500 active:scale-90">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-emerald-50 text-emerald-600 transition-all group-hover:bg-emerald-500 group-hover:text-white group-hover:rotate-12 group-hover:shadow-lg group-hover:shadow-emerald-200">
+                <span className="material-symbols-outlined text-[28px] filled">receipt_long</span>
               </div>
-              <span className="text-xs font-bold text-text-main">Mis Pedidos</span>
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-tighter">Pedidos</span>
             </Link>
-            <Link href="/favorites" className="group flex flex-col items-center gap-2.5 rounded-2xl bg-white p-4 shadow-sm border border-gray-100/80 hover:border-primary/30 hover:shadow-elevated transition-all duration-300 active:scale-95">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 group-hover:from-primary/25 group-hover:to-primary/10 transition-colors duration-300">
-                <span className="material-symbols-outlined text-primary text-[24px]">favorite</span>
+
+            <Link href="/favorites" className="group flex flex-col items-center gap-3 rounded-[2rem] bg-white p-5 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-rose-200 hover:bg-rose-50/30 transition-all duration-500 active:scale-90">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-rose-50 text-rose-500 transition-all group-hover:bg-rose-500 group-hover:text-white group-hover:rotate-12 group-hover:shadow-lg group-hover:shadow-rose-200">
+                <span className="material-symbols-outlined text-[28px] filled">favorite</span>
               </div>
-              <span className="text-xs font-bold text-text-main">Favoritos</span>
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-tighter">Favoritos</span>
             </Link>
-            <Link href="/orders" className="group flex flex-col items-center gap-2.5 rounded-2xl bg-white p-4 shadow-sm border border-gray-100/80 hover:border-primary/30 hover:shadow-elevated transition-all duration-300 active:scale-95">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 group-hover:from-primary/25 group-hover:to-primary/10 transition-colors duration-300">
-                <span className="material-symbols-outlined text-primary text-[24px]">schedule</span>
+
+            <Link href="/account" className="group flex flex-col items-center gap-3 rounded-[2rem] bg-white p-5 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all duration-500 active:scale-90">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[1.2rem] bg-indigo-50 text-indigo-600 transition-all group-hover:bg-indigo-500 group-hover:text-white group-hover:rotate-12 group-hover:shadow-lg group-hover:shadow-indigo-200">
+                <span className="material-symbols-outlined text-[28px] filled">person</span>
               </div>
-              <span className="text-xs font-bold text-text-main">Historial</span>
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-tighter">Cuenta</span>
             </Link>
           </div>
         </section>
 
-        {/* Promo Banner */}
+        {/* Premium Promo Banner synced with Login style */}
         <section>
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-background-dark via-surface-dark to-background-dark p-6 border border-primary/10">
-            {/* Animated orb */}
-            <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-primary/15 blur-2xl animate-float" />
-            <div className="absolute bottom-0 left-0 h-20 w-20 rounded-full bg-primary/10 blur-xl" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Nuevo
-                </span>
+          <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] p-8 border border-white/5 shadow-2xl flex flex-col items-center text-center">
+            {/* Animated Glow Orbs */}
+            <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl animate-pulse" />
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
+
+            <div className="relative z-10 w-full">
+              <div className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 inline-block mb-6 shadow-inner">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">IA Voice Experience</span>
+                </div>
               </div>
-              <h3 className="text-xl font-extrabold text-white mt-2">Pide por voz con IA</h3>
-              <p className="text-sm text-text-light/60 mt-1.5 leading-relaxed">Solo di lo que necesitas y nuestro carnicero IA lo prepara al instante.</p>
-              <Link href="/chat/carnes" className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-background-dark shadow-glow hover:brightness-110 transition-all active:scale-95">
-                <span className="material-symbols-outlined text-[18px]">mic</span>
-                Probar ahora
+
+              <h3 className="text-3xl font-black text-white tracking-tighter mb-4 leading-none">Ordena con tu voz</h3>
+              <p className="text-sm text-slate-400 font-medium mb-8 max-w-[280px] mx-auto leading-relaxed">Dile a nuestra IA lo que necesitas y nosotros nos encargamos del resto.</p>
+
+              <Link href="/chat/carnes" className="group flex items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-primary to-emerald-400 p-1 pr-6 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20">
+                <div className="h-12 w-12 rounded-full bg-[#0f172a] flex items-center justify-center text-white shadow-lg group-hover:rotate-[360deg] duration-700 transition-transform">
+                  <span className="material-symbols-outlined text-[24px]">mic</span>
+                </div>
+                <span className="text-sm font-black text-[#0f172a] uppercase tracking-widest pl-1">Probar ahora</span>
               </Link>
             </div>
           </div>
@@ -445,6 +341,124 @@ export default function HomePage() {
       </main>
 
       <NavBar variant="customer" />
+
+      {/* Out of Stock Modal */}
+      {showOutOfStockModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowOutOfStockModal(false)} />
+          <div className="relative w-full max-w-md bg-[#0f172a] rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Sin Stock</h3>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Disponibles bajo pedido</p>
+              </div>
+              <button
+                onClick={() => setShowOutOfStockModal(false)}
+                className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <div className="p-2 max-h-[60vh] overflow-y-auto">
+              {outOfStockProducts.length === 0 ? (
+                <div className="py-12 text-center">
+                  <span className="material-symbols-outlined text-slate-700 text-[40px] mb-2">inventory_2</span>
+                  <p className="text-slate-500 font-bold text-sm">Todo en inventario</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {outOfStockProducts.map((product) => (
+                    <div key={product.id} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors group">
+                      <div className="h-12 w-12 rounded-xl bg-slate-800/50 flex items-center justify-center text-slate-500">
+                        <span className="material-symbols-outlined">inventory</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-white truncate">{product.name}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">{product.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-emerald-400">{Number(product.price).toFixed(2)} €</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-6 bg-white/5 border-t border-white/5">
+              <button
+                onClick={() => setShowOutOfStockModal(false)}
+                className="w-full py-4 rounded-2xl bg-white text-[#0f172a] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Favorites Modal */}
+      {showFavoritesModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowFavoritesModal(false)} />
+          <div className="relative w-full max-w-md bg-[#0f172a] rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Mis Favoritos</h3>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{favoriteProducts.length} productos guardados</p>
+              </div>
+              <button
+                onClick={() => setShowFavoritesModal(false)}
+                className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <div className="p-2 max-h-[60vh] overflow-y-auto">
+              {favoriteProducts.length === 0 ? (
+                <div className="py-12 text-center">
+                  <span className="material-symbols-outlined text-rose-500/20 text-[40px] mb-2 filled">favorite</span>
+                  <p className="text-slate-500 font-bold text-sm">No tienes favoritos aún</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {favoriteProducts.map((product) => (
+                    <div key={product.id} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors group">
+                      <div className="h-12 w-12 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                        <span className="material-symbols-outlined filled">favorite</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-white truncate">{product.name}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">{product.category}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm font-black text-emerald-400">{Number(product.price).toFixed(2)} €</p>
+                        </div>
+                        <button
+                          onClick={() => toggleFavorite(product)}
+                          className="h-8 w-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-6 bg-white/5 border-t border-white/5">
+              <Link
+                href="/chat/carnes"
+                onClick={() => setShowFavoritesModal(false)}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-emerald-400 text-[#0f172a] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                Pedir mis favoritos
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
