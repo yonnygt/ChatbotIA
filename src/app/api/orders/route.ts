@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orders, orderItems } from "@/lib/schema";
+import { getCurrentUser } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 
 // GET — Fetch all orders (for dashboard)
 export async function GET() {
     try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        }
+
+        let query = db.select().from(orders);
+
+        // If customer, only show their own orders
+        if (user.role === "cliente") {
+            const userOrders = await db
+                .select()
+                .from(orders)
+                .where(eq(orders.userId, user.id))
+                .orderBy(desc(orders.createdAt));
+            return NextResponse.json({ orders: userOrders });
+        }
+
+        // staff/admin see all
         const allOrders = await db
             .select()
             .from(orders)
@@ -21,31 +40,30 @@ export async function GET() {
 // POST — Create a new order
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { items, totalAmount, userId = "user-123" } = body;
-
-        if (!items || items.length === 0) {
-            return NextResponse.json({ error: "No items provided" }, { status: 400 });
+        const user = await getCurrentUser();
+        if (!user) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
         }
 
-        const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const body = await req.json();
+        const { items, totalAmount, notes = "", estimatedMinutes = 15 } = body;
 
-        // Build descriptive notes from items
-        const notesText = items
-            .map((item: any) => `${item.name || "Producto"}: ${item.qty || "1"} (${item.subtotal || item.unitPrice || "0"}€)`)
-            .join(", ");
+        if (!items || !items.length) {
+            return NextResponse.json({ error: "El pedido está vacío" }, { status: 400 });
+        }
+
+        const orderNumber = `ORD-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)}`;
 
         const [newOrder] = await db
             .insert(orders)
             .values({
-                userId,
+                userId: user.id,
                 orderNumber,
                 status: "pending",
-                totalAmount: totalAmount.toString(),
-                priority: "normal",
-                estimatedMinutes: body.estimatedMinutes || 15,
-                notes: notesText,
-                items: items, // Save items snapshot for display
+                totalAmount: String(totalAmount),
+                notes: notes,
+                items: items,
+                estimatedMinutes,
             })
             .returning();
 

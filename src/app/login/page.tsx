@@ -86,9 +86,9 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h1 className="text-4xl font-black text-white tracking-tighter">
-                        Butcher<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">AI</span>
+                        SuperMarket<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">AI</span>
                     </h1>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.4em] mt-2">Carnicería Inteligente</p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.4em] mt-2">Supermercado Inteligente</p>
                 </div>
 
                 {/* Form Container */}

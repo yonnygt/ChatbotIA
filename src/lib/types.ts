@@ -1,4 +1,4 @@
-// Shared types for ButcherAI
+// Shared types for SuperMarket AI
 
 export interface User {
     id: number;
@@ -64,7 +64,7 @@ export interface Order {
     estimatedMinutes: number | null;
     totalAmount: string | null;
     priority?: string | null;
-    userId?: string | null;
+    userId?: number | null;
     createdAt: string | null;
     updatedAt?: string | null;
 }

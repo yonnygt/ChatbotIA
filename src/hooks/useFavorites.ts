@@ -2,27 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { Product } from "@/lib/types";
 
 export function useFavorites() {
-    const [userId, setUserId] = useState<string | null>(null);
     const [favorites, setFavorites] = useState<number[]>([]); // Store product IDs
     const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]); // Store full product details
     const [loading, setLoading] = useState(true);
 
-    // Initialize User ID
-    useEffect(() => {
-        let id = localStorage.getItem("chat_user_id");
-        if (!id) {
-            id = `user-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-            localStorage.setItem("chat_user_id", id);
-        }
-        setUserId(id);
-    }, []);
-
     // Fetch favorites
     const fetchFavorites = useCallback(async () => {
-        if (!userId) return;
-
         try {
-            const res = await fetch(`/api/favorites?userId=${userId}`);
+            const res = await fetch(`/api/favorites`);
             if (res.ok) {
                 const data = await res.json();
                 const favs = data.favorites || [];
@@ -49,14 +36,13 @@ export function useFavorites() {
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, []);
 
     useEffect(() => {
         fetchFavorites();
     }, [fetchFavorites]);
 
     const toggleFavorite = async (product: Product) => {
-        if (!userId) return;
 
         const isFav = favorites.includes(product.id);
         const action = isFav ? "remove" : "add";
@@ -77,7 +63,6 @@ export function useFavorites() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userId,
                     productId: product.id,
                     action
                 })

@@ -56,11 +56,11 @@ export default function ChatBubble({
                 {avatarUrl ? (
                     <img className="h-full w-full object-cover" src={avatarUrl} alt="Bot" />
                 ) : (
-                    <span className="text-sm">🥩</span>
+                    <span className="text-sm">🛒</span>
                 )}
             </div>
             <div className="flex flex-col items-start gap-1 max-w-[85%]">
-                <span className="ml-1 text-[11px] font-semibold text-text-secondary/70">Carnicero IA</span>
+                <span className="ml-1 text-[11px] font-semibold text-text-secondary/70">Asistente SuperMarket</span>
                 <div className="rounded-2xl rounded-tl-sm bg-white p-3.5 shadow-sm text-sm text-text-main border border-gray-100/80 w-full">
                     <p className={product || orderProposal ? "mb-3 px-0.5" : ""}>{text}</p>
 

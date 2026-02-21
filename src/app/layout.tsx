@@ -3,13 +3,13 @@ import "./globals.css";
 import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
-  title: "ButcherAI — Carnicería Inteligente",
-  description: "Pide a tu carnicero de confianza con inteligencia artificial. Pedidos por voz, seguimiento en tiempo real.",
+  title: "SuperMarket AI — Supermercado Inteligente",
+  description: "Haz tus compras con inteligencia artificial. Pedidos por voz, seguimiento en tiempo real.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "ButcherAI",
+    title: "SuperMarket AI",
   },
 };
 

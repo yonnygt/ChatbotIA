@@ -105,7 +105,7 @@ export default function HomePage() {
             <div>
               <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-1.5 opacity-80">BIENVENIDO DE NUEVO 👋</p>
               <h1 className="text-4xl font-black text-white tracking-tighter leading-none">
-                Carnicería <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">IA</span>
+                SuperMarket <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">AI</span>
               </h1>
             </div>
 
@@ -149,7 +149,7 @@ export default function HomePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
-                placeholder="Busca tu corte preferido..."
+                placeholder="Busca tus productos..."
                 className="flex-1 bg-transparent text-base text-white placeholder:text-slate-500 font-bold outline-none"
               />
               {searchQuery && (

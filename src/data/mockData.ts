@@ -1,4 +1,4 @@
-// Mock data for ButcherAI — decoupled from components
+// Mock data for SuperMarket AI — decoupled from components
 
 export interface Product {
     id: number;
@@ -68,7 +68,7 @@ export const mockChatMessages: ChatMessage[] = [
     {
         id: "1",
         role: "bot",
-        text: "¡Bienvenido de nuevo! El solomillo tiene una pinta excepcional hoy, recién cortado esta mañana. ¿Qué te pongo?",
+        text: "¡Bienvenido de nuevo! Nuestros productos están frescos y listos para ti hoy. ¿Qué te pongo?",
         timestamp: "10:23 AM",
     },
     {

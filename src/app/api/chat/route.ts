@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
             ? `\nCARRITO ACTUAL DEL CLIENTE (estos items YA están en el pedido):\n${JSON.stringify(currentCart, null, 2)}\n`
             : "\nCARRITO ACTUAL DEL CLIENTE: vacío (no ha pedido nada todavía)\n";
 
-        const systemPrompt = `Eres un carnicero experto y amable que atiende a clientes en una carnicería premium.
-Tu nombre es "Carnicero IA".
+        const systemPrompt = `Eres un asistente experto y amable que atiende a clientes en un supermercado premium.
+Tu nombre es "Asistente SuperMarket".
 
 INVENTARIO DISPONIBLE (categoría: ${category || "todas"}):
 ${productList}

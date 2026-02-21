@@ -123,7 +123,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             required
                             className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-                            placeholder="Ej: Lomo de res"
+                            placeholder="Ej: Producto o Artículo"
                         />
                     </div>
 

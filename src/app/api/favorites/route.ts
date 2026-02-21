@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { favorites, products } from "@/lib/schema";
+import { getCurrentUser } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 
 // GET — Fetch all favorites for a user
 export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("userId");
-
-        if (!userId) {
-            return NextResponse.json({ error: "User ID required" }, { status: 400 });
+        const user = await getCurrentUser();
+        if (!user) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
         }
 
         const userFavorites = await db
@@ -25,7 +24,7 @@ export async function GET(req: NextRequest) {
             })
             .from(favorites)
             .innerJoin(products, eq(favorites.productId, products.id))
-            .where(eq(favorites.userId, userId));
+            .where(eq(favorites.userId, user.id));
 
         return NextResponse.json({ favorites: userFavorites });
     } catch (error) {
@@ -37,31 +36,36 @@ export async function GET(req: NextRequest) {
 // POST — Add or remove a favorite
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json();
-        const { userId, productId, action } = body;
+        const user = await getCurrentUser();
+        if (!user) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        }
 
-        if (!userId || !productId) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        const body = await req.json();
+        const { productId, action } = body;
+
+        if (!productId) {
+            return NextResponse.json({ error: "Missing product ID" }, { status: 400 });
         }
 
         if (action === "remove") {
             await db
                 .delete(favorites)
-                .where(and(eq(favorites.userId, userId), eq(favorites.productId, Number(productId))));
+                .where(and(eq(favorites.userId, user.id), eq(favorites.productId, Number(productId))));
             return NextResponse.json({ success: true, message: "Removed from favorites" });
         } else {
             // Check if already exists to avoid duplicates
             const existing = await db
                 .select()
                 .from(favorites)
-                .where(and(eq(favorites.userId, userId), eq(favorites.productId, Number(productId))));
+                .where(and(eq(favorites.userId, user.id), eq(favorites.productId, Number(productId))));
 
             if (existing.length > 0) {
                 return NextResponse.json({ success: true, message: "Already in favorites" });
             }
 
             await db.insert(favorites).values({
-                userId,
+                userId: user.id,
                 productId: Number(productId),
             });
             return NextResponse.json({ success: true, message: "Added to favorites" });

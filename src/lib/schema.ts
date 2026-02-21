@@ -51,7 +51,7 @@ export const products = pgTable("products", {
 // ─── Orders ──────────────────────────────────────
 export const orders = pgTable("orders", {
     id: serial("id").primaryKey(),
-    userId: varchar("user_id", { length: 255 }),
+    userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
     orderNumber: varchar("order_number", { length: 50 }).notNull().unique(),
     priority: varchar("priority", { length: 10 }).default("normal"),
     status: varchar("status", { length: 30 }).default("pending").notNull(),
@@ -99,7 +99,9 @@ export const exchangeRates = pgTable("exchange_rates", {
 // ─── Favorites ───────────────────────────────────
 export const favorites = pgTable("favorites", {
     id: serial("id").primaryKey(),
-    userId: varchar("user_id", { length: 255 }).notNull(),
+    userId: integer("user_id")
+        .references(() => users.id, { onDelete: "cascade" })
+        .notNull(),
     productId: integer("product_id")
         .references(() => products.id, { onDelete: "cascade" })
         .notNull(),

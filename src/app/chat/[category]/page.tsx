@@ -27,7 +27,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
         {
             id: "welcome",
             role: "bot",
-            text: `¡Hola! Soy tu carnicero virtual ${catInfo.emoji}. ¿Qué te gustaría pedir hoy de ${catInfo.title.toLowerCase()}?`,
+            text: `¡Hola! Soy tu asistente virtual ${catInfo.emoji}. ¿Qué te gustaría comprar hoy de ${catInfo.title.toLowerCase()}?`,
             timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
         },
     ]);
@@ -233,7 +233,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                         <span className="text-[11px] text-text-secondary font-medium">
                             {currentCart.length > 0
                                 ? `${currentCart.length} producto${currentCart.length > 1 ? "s" : ""} en el pedido`
-                                : "Carnicero IA activo"}
+                                : "Asistente SuperMarket activo"}
                         </span>
                     </div>
                 </div>
