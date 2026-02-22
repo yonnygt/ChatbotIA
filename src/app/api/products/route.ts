@@ -1,17 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products } from "@/lib/schema";
+import { products, sections } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const category = searchParams.get("category");
+        const sectionSlug = searchParams.get("section");
 
-        let query = db.select().from(products);
+        // Join with sections to get section name
+        const query = db
+            .select({
+                id: products.id,
+                name: products.name,
+                description: products.description,
+                category: products.category,
+                sectionId: products.sectionId,
+                sectionName: sections.name,
+                price: products.price,
+                priceVes: products.priceVes,
+                unit: products.unit,
+                imageUrl: products.imageUrl,
+                sku: products.sku,
+                location: products.location,
+                inStock: products.inStock,
+                taxType: products.taxType,
+                createdAt: products.createdAt,
+            })
+            .from(products)
+            .leftJoin(sections, eq(products.sectionId, sections.id));
 
-        if (category) {
-            query = query.where(eq(products.category, category)) as typeof query;
+        // Filter by section slug or legacy category
+        if (sectionSlug) {
+            const result = await query.where(eq(sections.slug, sectionSlug));
+            return NextResponse.json(result);
+        } else if (category) {
+            const result = await query.where(eq(products.category, category));
+            return NextResponse.json(result);
         }
 
         const result = await query;
@@ -25,13 +51,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { name, description, category, price, unit, imageUrl, sku, location, inStock, taxType } = body;
+        const { name, description, category, sectionId, price, unit, imageUrl, sku, location, inStock, taxType } = body;
 
-        if (!name || !category || !price) {
+        if (!name || !price) {
             return NextResponse.json(
-                { error: "Nombre, categoría y precio son requeridos" },
+                { error: "Nombre y precio son requeridos" },
                 { status: 400 }
             );
+        }
+
+        // If sectionId provided, get section name for category field
+        let categoryValue = category || "general";
+        if (sectionId) {
+            const [section] = await db
+                .select({ slug: sections.slug })
+                .from(sections)
+                .where(eq(sections.id, sectionId));
+            if (section) categoryValue = section.slug;
         }
 
         const [product] = await db
@@ -39,7 +75,8 @@ export async function POST(req: NextRequest) {
             .values({
                 name,
                 description: description || null,
-                category,
+                category: categoryValue,
+                sectionId: sectionId || null,
                 price: String(price),
                 unit: unit || "kg",
                 imageUrl: imageUrl || null,
@@ -71,6 +108,7 @@ export async function PATCH(req: NextRequest) {
         if (updates.name !== undefined) allowedFields.name = updates.name;
         if (updates.description !== undefined) allowedFields.description = updates.description;
         if (updates.category !== undefined) allowedFields.category = updates.category;
+        if (updates.sectionId !== undefined) allowedFields.sectionId = updates.sectionId;
         if (updates.price !== undefined) allowedFields.price = String(updates.price);
         if (updates.unit !== undefined) allowedFields.unit = updates.unit;
         if (updates.imageUrl !== undefined) allowedFields.imageUrl = updates.imageUrl;
@@ -78,6 +116,15 @@ export async function PATCH(req: NextRequest) {
         if (updates.location !== undefined) allowedFields.location = updates.location;
         if (updates.inStock !== undefined) allowedFields.inStock = updates.inStock;
         if (updates.taxType !== undefined) allowedFields.taxType = updates.taxType;
+
+        // If sectionId updated, also update the category slug
+        if (updates.sectionId) {
+            const [section] = await db
+                .select({ slug: sections.slug })
+                .from(sections)
+                .where(eq(sections.id, updates.sectionId));
+            if (section) allowedFields.category = section.slug;
+        }
 
         if (Object.keys(allowedFields).length === 0) {
             return NextResponse.json({ error: "No hay campos para actualizar" }, { status: 400 });

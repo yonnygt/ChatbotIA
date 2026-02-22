@@ -13,6 +13,8 @@ export interface Product {
     name: string;
     description: string | null;
     category: string;
+    sectionId: number | null;
+    sectionName?: string;
     price: string;
     priceVes: string | null;
     unit: string | null;
@@ -46,6 +48,16 @@ export interface OrderProposalItem {
     qty: string;
     unitPrice: string;
     subtotal: string;
+}
+
+export interface Section {
+    id: number;
+    name: string;
+    slug: string;
+    emoji: string;
+    icon: string;
+    description: string | null;
+    displayOrder: number;
 }
 
 export interface Category {

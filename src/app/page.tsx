@@ -6,10 +6,10 @@ import NavBar from "@/components/NavBar";
 import type { Category, Product } from "@/lib/types";
 import { useFavorites } from "@/hooks/useFavorites";
 
-// Category card images
+// Category card images keyed by section slug
 const categoryImages: Record<string, string> = {
-  carnes: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTuG0qYnf0YyU_vYmtzPp9CrtL8HTFPi4v2vLqCOoKewZyVBUTC2iK32d0ppiccaGznmb-oVlOWl23N2vjdVj03jtQubVpae3QcjeXHucPPLfs_icoHBLItqRRjjnsunUueGPxYCbmGsQOYQacH7VoS66G1jInId8cF6QaqQLdSN8q3QafoONh1STXdoxk_z6RoNbgkuMRMKaLRNGpxDCApFNR8IlWAqZXNKhxqHElFBkzRY8FLmGeGDYLlxpcGDCpcdknYXR5Xr4_",
-  charcutería: "https://lh3.googleusercontent.com/aida-public/AB6AXuCNZX_popegsUEwVF7SygUQ7H78B6o6sGG8vkd8d2R8rmwInKuxfVkQtPwV2IrOFzeLbD7biDcCUqK6FVisSb88m0O_qF58iCwPdh0egsherGHnQDWenbHIxdi_MBFzeetxjTNFFRmOqEy5xD0Wq1Gpnpb1Xc84UernUpjq79OdfvQMFJa0gFjyYt4ltD3X21kO4GzBDldUqBRnKZUA7aWTR9NHtK7ewKIa3d0oEPWOTBCE6ltc3_WTxBnXpzASkrYgwcrCvEGhdvOo",
+  carniceria: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTuG0qYnf0YyU_vYmtzPp9CrtL8HTFPi4v2vLqCOoKewZyVBUTC2iK32d0ppiccaGznmb-oVlOWl23N2vjdVj03jtQubVpae3QcjeXHucPPLfs_icoHBLItqRRjjnsunUueGPxYCbmGsQOYQacH7VoS66G1jInId8cF6QaqQLdSN8q3QafoONh1STXdoxk_z6RoNbgkuMRMKaLRNGpxDCApFNR8IlWAqZXNKhxqHElFBkzRY8FLmGeGDYLlxpcGDCpcdknYXR5Xr4_",
+  charcuteria: "https://lh3.googleusercontent.com/aida-public/AB6AXuCNZX_popegsUEwVF7SygUQ7H78B6o6sGG8vkd8d2R8rmwInKuxfVkQtPwV2IrOFzeLbD7biDcCUqK6FVisSb88m0O_qF58iCwPdh0egsherGHnQDWenbHIxdi_MBFzeetxjTNFFRmOqEy5xD0Wq1Gpnpb1Xc84UernUpjq79OdfvQMFJa0gFjyYt4ltD3X21kO4GzBDldUqBRnKZUA7aWTR9NHtK7ewKIa3d0oEPWOTBCE6ltc3_WTxBnXpzASkrYgwcrCvEGhdvOo",
   preparados: "https://lh3.googleusercontent.com/aida-public/AB6AXuAex6ZUDh4Mv7YUU9gtl3qUpPoFJmgYheh0i7tqr6Sqc7a6s30NSyxSGe62QvmqDetSfVO0lonwUIp4wBhFLmJJPYUPUi8vdNhwjWSxwQI6VPE_npuCZ5AiNddJ7u6VL2GqusR3NA-xslWK54vXROeIixL-jkHcUV7C57CxDMENvYkuETqxbZz4PFiA5cH82KYYAvl57l1AW8Qfk1CE-RqVXlgHqy1Y2BK_jn8uwVULw5KFpSyqESNvs0iDc4F46c4B0GTPo9yr5Eo1",
 };
 
@@ -249,17 +249,17 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {categories.map((cat) => (
+              {categories.map((cat: any) => (
                 <Link
                   key={cat.name}
                   href={`/chat/${encodeURIComponent(cat.name)}`}
                   className="group relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 transition-all duration-500 hover:shadow-2xl hover:border-primary/40 hover:-translate-y-1 active:scale-95"
                 >
                   <div className="h-28 w-full overflow-hidden bg-slate-50 relative">
-                    {categoryImages[cat.name.toLowerCase()] ? (
+                    {categoryImages[cat.name] ? (
                       <img
-                        src={categoryImages[cat.name.toLowerCase()]}
-                        alt={cat.name}
+                        src={categoryImages[cat.name]}
+                        alt={cat.displayName || cat.name}
                         className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                     ) : (
@@ -274,7 +274,7 @@ export default function HomePage() {
                       <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center text-lg shadow-inner group-hover:scale-110 transition-transform">
                         {cat.emoji}
                       </div>
-                      <h3 className="text-sm font-black text-slate-800 capitalize tracking-tight">{cat.name}</h3>
+                      <h3 className="text-sm font-black text-slate-800 tracking-tight">{cat.displayName || cat.name}</h3>
                     </div>
                     <p className="text-[10px] text-slate-400 font-bold leading-relaxed line-clamp-2 uppercase tracking-tighter">{cat.description}</p>
                   </div>
@@ -447,14 +447,12 @@ export default function HomePage() {
               )}
             </div>
             <div className="p-6 bg-white/5 border-t border-white/5">
-              <Link
-                href="/chat/carnes"
+              <button
                 onClick={() => setShowFavoritesModal(false)}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-emerald-400 text-[#0f172a] flex items-center justify-center gap-2 font-black text-xs uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                className="w-full py-4 rounded-2xl bg-white text-[#0f172a] font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-                Pedir mis favoritos
-              </Link>
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

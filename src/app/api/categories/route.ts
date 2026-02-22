@@ -1,32 +1,31 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products } from "@/lib/schema";
-
-// Category metadata for display
-const categoryMeta: Record<string, { emoji: string; icon: string; description: string }> = {
-    carnes: { emoji: "🥩", icon: "lunch_dining", description: "Cortes frescos de res, cerdo y pollo" },
-    charcutería: { emoji: "🍖", icon: "bakery_dining", description: "Jamones, salamis y embutidos selectos" },
-    preparados: { emoji: "🍗", icon: "skillet", description: "Platos listos y marinados" },
-};
+import { sections } from "@/lib/schema";
+import { asc } from "drizzle-orm";
 
 export async function GET() {
     try {
-        const result = await db
-            .selectDistinct({ category: products.category })
-            .from(products);
+        const allSections = await db
+            .select()
+            .from(sections)
+            .orderBy(asc(sections.displayOrder));
 
-        const categories = result.map((row) => {
-            const key = row.category.toLowerCase();
-            const meta = categoryMeta[key] || { emoji: "📦", icon: "category", description: "Productos variados" };
-            return {
-                name: row.category,
-                ...meta,
-            };
-        });
+        // Map sections to Category-compatible format for backward compat
+        const categories = allSections.map((s) => ({
+            name: s.slug,
+            emoji: s.emoji,
+            icon: s.icon,
+            description: s.description || s.name,
+            displayName: s.name,
+            id: s.id,
+        }));
 
         return NextResponse.json({ categories });
     } catch (error) {
         console.error("Error fetching categories:", error);
-        return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Error al obtener categorías" },
+            { status: 500 }
+        );
     }
 }

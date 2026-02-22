@@ -10,6 +10,18 @@ import {
     integer,
 } from "drizzle-orm/pg-core";
 
+// ─── Sections (Secciones del Supermercado) ───────
+export const sections = pgTable("sections", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull().unique(),
+    slug: varchar("slug", { length: 100 }).notNull().unique(),
+    emoji: varchar("emoji", { length: 10 }).notNull().default("📦"),
+    icon: varchar("icon", { length: 50 }).notNull().default("category"),
+    description: text("description"),
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ─── Users ───────────────────────────────────────
 export const users = pgTable("users", {
     id: serial("id").primaryKey(),
@@ -37,6 +49,7 @@ export const products = pgTable("products", {
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     category: varchar("category", { length: 100 }).notNull(),
+    sectionId: integer("section_id").references(() => sections.id),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
     priceVes: numeric("price_ves", { precision: 20, scale: 4 }),
     unit: varchar("unit", { length: 50 }).default("kg"),
@@ -105,5 +118,18 @@ export const favorites = pgTable("favorites", {
     productId: integer("product_id")
         .references(() => products.id, { onDelete: "cascade" })
         .notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ─── WebAuthn Credentials ────────────────────────
+export const webauthnCredentials = pgTable("webauthn_credentials", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+        .references(() => users.id, { onDelete: "cascade" })
+        .notNull(),
+    credentialId: text("credential_id").notNull().unique(),
+    publicKey: text("public_key").notNull(),
+    counter: integer("counter").notNull().default(0),
+    deviceName: varchar("device_name", { length: 100 }),
     createdAt: timestamp("created_at").defaultNow(),
 });

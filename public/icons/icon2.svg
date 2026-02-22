@@ -1,0 +1,69 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Deep Dark Emerald Background -->
+    <radialGradient id="bg_grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1c3b24"/>
+      <stop offset="100%" stop-color="#102216"/>
+    </radialGradient>
+
+    <!-- Neon Glow for Neural Paths -->
+    <filter id="neon_glow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.07 0 0 0 0 0.92 0 0 0 0 0.35 0 0 0 0.6 0"/>
+      <feBlend mode="screen" in="SourceGraphic"/>
+    </filter>
+
+    <linearGradient id="primary_neon" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13ec5b"/>
+      <stop offset="1" stop-color="#0cc94d"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="128" fill="url(#bg_grad)"/>
+
+  <!-- The Neural Basket Concept -->
+  <g filter="url(#neon_glow)">
+    <!-- Basket Profile formed by Neural Nodes -->
+    <!-- Handle -->
+    <path d="M140 160 C 140 100, 372 100, 372 160" stroke="#13ec5b" stroke-width="12" stroke-linecap="round" stroke-dasharray="2 20"/>
+    
+    <!-- Basket Body (Nodes & Connections) -->
+    <!-- Main outer frame nodes -->
+    <circle cx="140" cy="180" r="8" fill="#13ec5b"/> <!-- Top Left -->
+    <circle cx="372" cy="180" r="8" fill="#13ec5b"/> <!-- Top Right -->
+    <circle cx="180" cy="340" r="10" fill="#13ec5b"/> <!-- Bottom Left -->
+    <circle cx="332" cy="340" r="10" fill="#13ec5b"/> <!-- Bottom Right -->
+    
+    <!-- Central AI Node (Shopping Cart Icon) -->
+    <g transform="translate(236, 210) scale(0.4)">
+       <path d="M20 20 H40 L55 120 H120 L135 20 H40" stroke="white" stroke-width="15" stroke-linecap="round" fill="none"/>
+       <circle cx="60" cy="145" r="15" fill="white"/>
+       <circle cx="115" cy="145" r="15" fill="white"/>
+    </g>
+
+    <!-- Neural Connections (The Web) -->
+    <path d="M140 180 L180 340 M372 180 L332 340 M180 340 L332 340 M140 180 L372 180" stroke="#13ec5b" stroke-width="4" stroke-opacity="0.3"/>
+    
+    <!-- Cross connections to the center -->
+    <path d="M140 180 L256 240 M372 180 L256 240 M180 340 L256 240 M332 340 L256 240" stroke="#13ec5b" stroke-width="2" stroke-opacity="0.5"/>
+    
+    <!-- Extra Data Nodes -->
+    <circle cx="210" cy="220" r="4" fill="#13ec5b" opacity="0.6"/>
+    <circle cx="300" cy="270" r="5" fill="#13ec5b" opacity="0.8"/>
+    <circle cx="256" cy="180" r="4" fill="white" opacity="0.4"/>
+  </g>
+
+  <!-- Typography: SuperMarket AI -->
+  <text x="256" y="445" text-anchor="middle" fill="white" font-family="Plus Jakarta Sans, sans-serif" font-weight="900" font-size="44" letter-spacing="-1">
+    SuperMarket <tspan fill="#13ec5b">AI</tspan>
+  </text>
+  
+  <!-- Subtitle for the "Smart" theme -->
+  <text x="256" y="475" text-anchor="middle" fill="#13ec5b" fill-opacity="0.5" font-family="Plus Jakarta Sans, sans-serif" font-weight="600" font-size="18" letter-spacing="4">
+    SMART GROCERY
+  </text>
+
+  <!-- Final Surface Gloss (Sleek diagonal) -->
+  <path d="M480 32C480 32 350 100 200 350C50 600 0 512 0 512" fill="white" fill-opacity="0.03" pointer-events="none"/>
+</svg>

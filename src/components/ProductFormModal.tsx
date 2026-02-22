@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Product } from "@/lib/types";
+import type { Product, Section } from "@/lib/types";
 
 interface ProductFormModalProps {
     product?: Product | null;
@@ -9,7 +9,6 @@ interface ProductFormModalProps {
     onSaved: () => void;
 }
 
-const CATEGORIES = ["res", "cerdo", "pollo", "charcutería", "otros"];
 const IVA_RATE = 0.16; // 16% IVA
 
 export default function ProductFormModal({ product, onClose, onSaved }: ProductFormModalProps) {
@@ -17,7 +16,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
     const [form, setForm] = useState({
         name: "",
         description: "",
-        category: "res",
+        sectionId: 0,
         price: "",
         unit: "kg",
         imageUrl: "",
@@ -27,13 +26,26 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+    const [sections, setSections] = useState<Section[]>([]);
+
+    useEffect(() => {
+        fetch("/api/sections")
+            .then((r) => r.json())
+            .then((d) => {
+                setSections(d.sections || []);
+                if (!product && d.sections?.length) {
+                    setForm((f) => ({ ...f, sectionId: d.sections[0].id }));
+                }
+            })
+            .catch(() => { });
+    }, []);
 
     useEffect(() => {
         if (product) {
             setForm({
                 name: product.name,
                 description: product.description || "",
-                category: product.category,
+                sectionId: product.sectionId || 0,
                 price: product.price,
                 unit: product.unit || "kg",
                 imageUrl: product.imageUrl || "",
@@ -139,17 +151,17 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                         />
                     </div>
 
-                    {/* Category + Unit row */}
+                    {/* Sección + Unit row */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Categoría *</label>
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Sección *</label>
                             <select
-                                value={form.category}
-                                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                                value={form.sectionId}
+                                onChange={(e) => setForm({ ...form, sectionId: parseInt(e.target.value) })}
                                 className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-primary/50 transition-all"
                             >
-                                {CATEGORIES.map((c) => (
-                                    <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                                {sections.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.emoji} {s.name}</option>
                                 ))}
                             </select>
                         </div>

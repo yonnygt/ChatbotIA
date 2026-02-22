@@ -3,57 +3,33 @@
 import { useEffect, useState, useCallback } from "react";
 import NavBar from "@/components/NavBar";
 import OrderCard from "@/components/OrderCard";
-import ToastNotification from "@/components/ToastNotification";
 import type { Order } from "@/lib/types";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<"active" | "history">("active");
-    const [previousStatuses, setPreviousStatuses] = useState<Record<string, string>>({});
 
     const fetchOrders = useCallback(async () => {
         try {
             const res = await fetch("/api/orders");
             if (res.ok) {
                 const data = await res.json();
-                const newOrders: Order[] = data.orders || [];
-
-                // Check for status changes and notify
-                newOrders.forEach((order) => {
-                    const prevStatus = previousStatuses[order.id];
-                    if (prevStatus && prevStatus !== order.status) {
-                        if (order.status === "preparing" && typeof window !== "undefined" && (window as any).__addToast) {
-                            (window as any).__addToast(`Pedido ${order.orderNumber} en preparación 🔪`, "info");
-                        }
-                        if (order.status === "ready" && typeof window !== "undefined" && (window as any).__addToast) {
-                            (window as any).__addToast(`¡Pedido ${order.orderNumber} listo! 🎉`, "success");
-                        }
-                    }
-                });
-
-                setPreviousStatuses(Object.fromEntries(newOrders.map((o) => [o.id, o.status])));
-                setOrders(newOrders);
+                setOrders(data.orders || []);
             }
         } catch {
             // fail silently
         } finally {
             setLoading(false);
         }
-    }, [previousStatuses]);
+    }, []);
 
     useEffect(() => {
         fetchOrders();
         const interval = setInterval(fetchOrders, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchOrders]);
 
-    // Request notification permission
-    useEffect(() => {
-        if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission();
-        }
-    }, []);
 
     const activeOrders = orders.filter((o) => o.status !== "completed");
     const historyOrders = orders.filter((o) => o.status === "completed");
@@ -61,7 +37,6 @@ export default function OrdersPage() {
 
     return (
         <div className="flex flex-col min-h-dvh bg-background-light">
-            <ToastNotification />
 
             {/* Header */}
             <header className="px-5 pt-12 pb-4">

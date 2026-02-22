@@ -9,25 +9,34 @@ import { useGeminiRecorder } from "@/hooks/useGeminiRecorder";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { Product, OrderProposal, OrderProposalItem, ChatMessage } from "@/lib/types";
 
-const categoryTitles: Record<string, { title: string; emoji: string }> = {
-    carnes: { title: "Carnes", emoji: "🥩" },
-    charcutería: { title: "Charcutería", emoji: "🧀" },
-    preparados: { title: "Preparados", emoji: "🍖" },
-};
-
 export default function ChatPage({ params }: { params: Promise<{ category: string }> }) {
     const { category } = use(params);
     const router = useRouter();
     const decodedCategory = decodeURIComponent(category);
-    const catInfo = categoryTitles[decodedCategory.toLowerCase()] || { title: decodedCategory, emoji: "🛒" };
+    const [catInfo, setCatInfo] = useState({ title: decodedCategory, emoji: "🛒" });
 
     const { isFavorite, toggleFavorite } = useFavorites();
+
+    // Fetch section info from API
+    useEffect(() => {
+        fetch("/api/sections")
+            .then((r) => r.json())
+            .then((d) => {
+                const sec = (d.sections || []).find(
+                    (s: any) => s.slug === decodedCategory.toLowerCase()
+                );
+                if (sec) {
+                    setCatInfo({ title: sec.name, emoji: sec.emoji });
+                }
+            })
+            .catch(() => { });
+    }, [decodedCategory]);
 
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: "welcome",
             role: "bot",
-            text: `¡Hola! Soy tu asistente virtual ${catInfo.emoji}. ¿Qué te gustaría comprar hoy de ${catInfo.title.toLowerCase()}?`,
+            text: `¡Hola! Soy tu asistente virtual 🛒. ¿Qué te gustaría comprar hoy?`,
             timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
         },
     ]);
@@ -37,6 +46,32 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
     const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
     const [currentCart, setCurrentCart] = useState<OrderProposalItem[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const confirmationShownRef = useRef(false);
+    const lastOrderProposalRef = useRef<OrderProposal | null>(null);
+
+    // Client-side intent detection helpers
+    const isFinalizationPhrase = (text: string): boolean => {
+        const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const patterns = [
+            /^(eso es todo|es todo|nada mas|ya esta|asi esta bien|ya no mas)$/,
+            /^(listo|ya|finalizar|terminar|terminamos|es todo)$/,
+            /^(cuanto (es|sale|seria|cuesta)|el total|dame el total|cuanto te debo)$/,
+            /^(quiero pagar|cobrame|proceder|cerrar pedido)$/,
+            /eso es todo|nada mas|es todo lo que quiero|ya no quiero nada|ya con eso/,
+        ];
+        return patterns.some(p => p.test(normalized));
+    };
+
+    const isConfirmationPhrase = (text: string): boolean => {
+        const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const patterns = [
+            /^(si|sí|s[ií]p|sep|ok|okay|vale|va|dale|claro|por supuesto)$/,
+            /^(confirmo|confirmar|confirmado|de acuerdo|correcto|exacto|perfecto)$/,
+            /^(aceptar|acepto|afirmativo|todo bien|esta bien)$/,
+            /^(procede|adelante|hagalo|hazlo|manda|envialo|listo)$/,
+        ];
+        return patterns.some(p => p.test(normalized));
+    };
 
     const { isRecording, isProcessing, toggleRecording } = useGeminiRecorder();
 
@@ -95,15 +130,77 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
                 timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
             };
 
+            // CLIENT-SIDE: If confirmation was already shown and user says "sí"/"dale"/etc → auto-confirm
+            if (confirmationShownRef.current && isConfirmationPhrase(msg) && currentCart.length > 0) {
+                console.log("[Chat] Client-side auto-confirm triggered");
+                const cartTotal = currentCart.reduce((sum, item) => sum + parseFloat(item.subtotal), 0).toFixed(2);
+                const orderToConfirm: OrderProposal = {
+                    items: currentCart,
+                    total: data.orderProposal?.total || cartTotal,
+                    estimatedMinutes: data.orderProposal?.estimatedMinutes || 10,
+                };
+                botMessage.orderProposal = orderToConfirm;
+                botMessage.showConfirmation = true;
+                setMessages((prev) => [...prev, botMessage]);
+                await handleConfirmOrder(orderToConfirm, botMessage.id);
+                confirmationShownRef.current = false;
+                setLoading(false);
+                return;
+            }
+
             // Update cart state from AI response
             if (data.orderProposal && data.orderProposal.items && data.orderProposal.items.length > 0) {
                 setCurrentCart(data.orderProposal.items);
+                lastOrderProposalRef.current = data.orderProposal;
                 botMessage.orderProposal = data.orderProposal;
-                botMessage.showConfirmation = data.showConfirmation === true;
+
+                // Determine if confirmation should show (AI says so OR client-side finalization detected)
+                const aiWantsConfirmation = data.showConfirmation === true;
+                const clientDetectedFinalization = isFinalizationPhrase(msg);
+                botMessage.showConfirmation = aiWantsConfirmation || clientDetectedFinalization;
+
+                if (botMessage.showConfirmation) {
+                    confirmationShownRef.current = true;
+                }
+
+                // Auto-confirm if AI detected explicit confirmation AND has valid order
+                if (data.autoConfirm === true) {
+                    setMessages((prev) => [...prev, botMessage]);
+                    await handleConfirmOrder(data.orderProposal, botMessage.id);
+                    confirmationShownRef.current = false;
+                    setLoading(false);
+                    return;
+                }
+            } else if (data.autoConfirm === true && currentCart.length > 0) {
+                // AI wants to confirm but didn't send orderProposal - use current cart
+                const cartTotal = currentCart.reduce((sum, item) => sum + parseFloat(item.subtotal), 0).toFixed(2);
+                const orderToConfirm: OrderProposal = {
+                    items: currentCart,
+                    total: cartTotal,
+                    estimatedMinutes: 10
+                };
+                botMessage.orderProposal = orderToConfirm;
+                botMessage.showConfirmation = true;
+                setMessages((prev) => [...prev, botMessage]);
+                await handleConfirmOrder(orderToConfirm, botMessage.id);
+                confirmationShownRef.current = false;
+                setLoading(false);
+                return;
             } else if (data.orderProposal === null) {
-                // AI explicitly cleared the cart (e.g., user said "cancel" or "nothing")
-                // Only clear if the AI explicitly returned null
-                // Keep current cart if AI just didn't mention it
+                // AI explicitly cleared the cart
+                confirmationShownRef.current = false;
+            }
+
+            // CLIENT-SIDE: If user says finalization phrase and there's a cart → force show confirmation
+            if (!botMessage.showConfirmation && isFinalizationPhrase(msg) && currentCart.length > 0 && !botMessage.orderProposal) {
+                const cartTotal = currentCart.reduce((sum, item) => sum + parseFloat(item.subtotal), 0).toFixed(2);
+                botMessage.orderProposal = lastOrderProposalRef.current || {
+                    items: currentCart,
+                    total: cartTotal,
+                    estimatedMinutes: 10,
+                };
+                botMessage.showConfirmation = true;
+                confirmationShownRef.current = true;
             }
 
             if (data.product) botMessage.product = data.product;

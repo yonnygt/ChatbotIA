@@ -5,15 +5,15 @@ import NavBar from "@/components/NavBar";
 import InventoryItem from "@/components/InventoryItem";
 import ProductFormModal from "@/components/ProductFormModal";
 import ToastNotification from "@/components/ToastNotification";
-import type { Product } from "@/lib/types";
+import type { Product, Section } from "@/lib/types";
 
-const CATEGORIES = ["res", "cerdo", "pollo", "charcutería", "otros"];
 
 export default function InventoryPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [sections, setSections] = useState<Section[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [selectedSection, setSelectedSection] = useState("all");
     const [showOutOfStock, setShowOutOfStock] = useState(false);
     const [modalProduct, setModalProduct] = useState<Product | null | undefined>(undefined);
     // undefined = modal closed, null = new product, Product = editing
@@ -33,6 +33,10 @@ export default function InventoryPage() {
 
     useEffect(() => {
         fetchProducts();
+        fetch("/api/sections")
+            .then((r) => r.json())
+            .then((d) => setSections(d.sections || []))
+            .catch(() => { });
     }, []);
 
     const handleToggleStock = async (productId: number, inStock: boolean) => {
@@ -62,7 +66,7 @@ export default function InventoryPage() {
 
     const filteredProducts = products.filter((p) => {
         if (showOutOfStock) return !p.inStock;
-        if (selectedCategory !== "all" && p.category?.toLowerCase() !== selectedCategory.toLowerCase()) return false;
+        if (selectedSection !== "all" && String(p.sectionId) !== selectedSection) return false;
         if (search) {
             const q = search.toLowerCase();
             return (
@@ -89,7 +93,7 @@ export default function InventoryPage() {
                             <button
                                 onClick={() => {
                                     setShowOutOfStock(!showOutOfStock);
-                                    setSelectedCategory("all");
+                                    setSelectedSection("all");
                                 }}
                                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 border transition-all ${showOutOfStock
                                     ? "bg-red-500 text-white border-red-600 shadow-md"
@@ -142,24 +146,24 @@ export default function InventoryPage() {
             {/* Category filters */}
             <div className="flex gap-2 px-5 mb-4 overflow-x-auto scrollbar-hide">
                 <button
-                    onClick={() => setSelectedCategory("all")}
-                    className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition-all duration-200 ${selectedCategory === "all"
+                    onClick={() => setSelectedSection("all")}
+                    className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition-all duration-200 ${selectedSection === "all"
                         ? "bg-primary text-white shadow-soft"
                         : "bg-white text-gray-500 border border-gray-200 hover:border-primary/30"
                         }`}
                 >
                     Todos
                 </button>
-                {CATEGORIES.map((cat) => (
+                {sections.map((sec) => (
                     <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat)}
-                        className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold capitalize transition-all duration-200 ${selectedCategory === cat
+                        key={sec.id}
+                        onClick={() => setSelectedSection(String(sec.id))}
+                        className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold transition-all duration-200 ${selectedSection === String(sec.id)
                             ? "bg-primary text-white shadow-soft"
                             : "bg-white text-gray-500 border border-gray-200 hover:border-primary/30"
                             }`}
                     >
-                        {cat}
+                        {sec.emoji} {sec.name}
                     </button>
                 ))}
             </div>

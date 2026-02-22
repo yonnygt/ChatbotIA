@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products } from "@/lib/schema";
+import { products, favorites, sections } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,15 +19,22 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Fetch products from DB filtered by category
+        // Fetch products from DB filtered by section slug
         let inventory;
         try {
             if (category) {
-                inventory = await db.select().from(products).where(eq(products.category, category));
+                // Look up section by slug
+                const [section] = await db.select().from(sections).where(eq(sections.slug, category));
+                if (section) {
+                    inventory = await db.select().from(products).where(eq(products.sectionId, section.id));
+                } else {
+                    // Fallback to legacy category field
+                    inventory = await db.select().from(products).where(eq(products.category, category));
+                }
             } else {
                 inventory = await db.select().from(products);
             }
-            console.log(`[Chat API] Fetched ${inventory.length} products for category: ${category || "all"}`);
+            console.log(`[Chat API] Fetched ${inventory.length} products for section: ${category || "all"}`);
         } catch (dbError) {
             console.error("[Chat API] DB error:", dbError);
             return NextResponse.json({
@@ -43,6 +51,33 @@ export async function POST(req: NextRequest) {
             )
             .join("\n");
 
+        // Fetch user favorites if authenticated
+        let favoritesContext = "";
+        try {
+            const currentUser = await getCurrentUser();
+            if (currentUser) {
+                const userFavorites = await db
+                    .select({
+                        productName: products.name,
+                        productPrice: products.price,
+                        productCategory: products.category,
+                        inStock: products.inStock,
+                    })
+                    .from(favorites)
+                    .innerJoin(products, eq(favorites.productId, products.id))
+                    .where(eq(favorites.userId, currentUser.id));
+
+                if (userFavorites.length > 0) {
+                    const favList = userFavorites
+                        .map(f => `- ${f.productName} | ${f.productPrice}€ | ${f.inStock ? "En stock" : "Agotado"}`)
+                        .join("\n");
+                    favoritesContext = `\nPRODUCTOS FAVORITOS DEL CLIENTE (los ha marcado como favoritos):\n${favList}\n`;
+                }
+            }
+        } catch (err) {
+            console.error("[Chat API] Error fetching favorites:", err);
+        }
+
         // Build the current cart context for the AI
         const cartContext = currentCart.length > 0
             ? `\nCARRITO ACTUAL DEL CLIENTE (estos items YA están en el pedido):\n${JSON.stringify(currentCart, null, 2)}\n`
@@ -53,7 +88,7 @@ Tu nombre es "Asistente SuperMarket".
 
 INVENTARIO DISPONIBLE (categoría: ${category || "todas"}):
 ${productList}
-${cartContext}
+${favoritesContext}${cartContext}
 REGLAS FUNDAMENTALES:
 1. Responde SIEMPRE en español, de forma natural y amigable.
 2. Cuando el cliente pida un producto, busca coincidencias en el inventario.
@@ -69,9 +104,18 @@ REGLAS CRÍTICAS PARA EL CARRITO Y orderProposal:
 10. Si el cliente quiere MODIFICAR una cantidad de un item existente, actualiza ese item y mantén los demás.
 11. Si el cliente quiere ELIMINAR un item, quítalo del orderProposal y mantén los demás.
 12. SIEMPRE que haya al menos un item en el pedido, devuelve orderProposal con los items acumulados.
-13. Pon "showConfirmation": false mientras el cliente siga pidiendo o modificando. Pregunta "¿Algo más?" o "¿Eso es todo?".
-14. SOLO pon "showConfirmation": true cuando el cliente EXPLÍCITAMENTE indique que ha terminado: "eso es todo", "confirmar", "cuánto es", "listo", "ya", "así está bien", "nada más", "dale", "confirmo".
-15. Si el carrito está vacío y es una conversación casual (saludo, pregunta general), pon orderProposal en null.
+
+REGLAS DE CONFIRMACIÓN (MUY IMPORTANTE):
+13. Pon "showConfirmation": false mientras el cliente siga pidiendo o modificando items.
+14. Pon "showConfirmation": true SOLO cuando el cliente diga EXPLÍCITAMENTE que quiere finalizar: "eso es todo", "cuánto es", "listo", "ya", "así está bien", "nada más".
+15. Si el cliente dice "confirmar", "confirmo", "dale", "sí", "ok" o similar DESPUÉS de que ya se mostró el resumen:
+    - Pon "autoConfirm": true
+    - DEBES incluir el orderProposal completo con TODOS los items del carrito
+    - Pon "showConfirmation": true
+16. Si el carrito está vacío y es una conversación casual (saludo, pregunta general), pon orderProposal en null.
+17. NO preguntes múltiples veces si desea confirmar. Si ya mostraste el resumen con showConfirmation: true, y el cliente responde afirmativamente, activa autoConfirm: true y envía el orderProposal completo.
+18. CRÍTICO: Si autoConfirm es true, orderProposal NO puede ser null. Debe contener todos los items del carrito.
+19. Si el cliente menciona "mis favoritos", "lo de siempre", "productos favoritos" o similar, consulta la sección PRODUCTOS FAVORITOS DEL CLIENTE y sugiere esos productos. Si alguno está agotado, infórmalo.
 
 FORMATO DE RESPUESTA — Responde SOLO con un objeto JSON válido, SIN texto adicional:
 {
@@ -84,18 +128,20 @@ FORMATO DE RESPUESTA — Responde SOLO con un objeto JSON válido, SIN texto adi
     "total": "24.45",
     "estimatedMinutes": 10
   },
-  "showConfirmation": false
+  "showConfirmation": false,
+  "autoConfirm": false
 }
 
 NOTAS:
 - "suggestedProducts" solo cuando quieras recomendar productos adicionales.
 - Si es conversación casual sin pedido, pon orderProposal en null y suggestedProducts vacío.
+- "autoConfirm" debe ser true SOLO cuando el cliente confirme explícitamente un pedido que ya tiene showConfirmation: true.
 - RESPONDE SOLO JSON válido. Nada de texto antes o después del JSON.`;
 
         // Build conversation for Gemini
         const contents = [
             { role: "user" as const, parts: [{ text: systemPrompt }] },
-            { role: "model" as const, parts: [{ text: '{"reply": "¡Entendido! Estoy listo para atenderte.", "suggestedProducts": [], "orderProposal": null, "showConfirmation": false}' }] },
+            { role: "model" as const, parts: [{ text: '{"reply": "¡Entendido! Estoy listo para atenderte.", "suggestedProducts": [], "orderProposal": null, "showConfirmation": false, "autoConfirm": false}' }] },
         ];
 
         // Add conversation history (clean, no injected context)

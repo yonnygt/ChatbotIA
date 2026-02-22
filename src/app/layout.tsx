@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "SuperMarket AI — Supermercado Inteligente",
   description: "Haz tus compras con inteligencia artificial. Pedidos por voz, seguimiento en tiempo real.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -41,7 +45,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-display antialiased theme-customer bg-background-light text-text-main">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
