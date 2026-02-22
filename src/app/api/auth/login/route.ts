@@ -3,15 +3,34 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
     try {
+        // Brute-force protection: 5 login attempts per IP every 5 minutes
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown-ip";
+        const { limited, retryAfter } = rateLimit(`login_${ip}`, 5, 300000);
+        if (limited) {
+            return NextResponse.json(
+                { error: `Demasiados intentos. Espera ${retryAfter} segundos.` },
+                { status: 429, headers: { "Retry-After": String(retryAfter) } }
+            );
+        }
+
         const body = await req.json();
         const { email, password } = body;
 
         if (!email || !password) {
             return NextResponse.json(
                 { error: "Email y contraseña son requeridos" },
+                { status: 400 }
+            );
+        }
+
+        // Basic email format validation
+        if (typeof email !== "string" || email.length > 320) {
+            return NextResponse.json(
+                { error: "Email inválido" },
                 { status: 400 }
             );
         }

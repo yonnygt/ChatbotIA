@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orders, orderItems } from "@/lib/schema";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, requireRole } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 
 // GET — Fetch all orders (for dashboard)
@@ -52,6 +52,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "El pedido está vacío" }, { status: 400 });
         }
 
+        // Limit items to a reasonable amount
+        if (items.length > 50) {
+            return NextResponse.json({ error: "Demasiados items en el pedido" }, { status: 400 });
+        }
+
         const orderNumber = `ORD-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)}`;
 
         const [newOrder] = await db
@@ -61,7 +66,7 @@ export async function POST(req: Request) {
                 orderNumber,
                 status: "pending",
                 totalAmount: String(totalAmount),
-                notes: notes,
+                notes: typeof notes === "string" ? notes.slice(0, 500) : "",
                 items: items,
                 estimatedMinutes,
             })
@@ -99,9 +104,11 @@ export async function POST(req: Request) {
     }
 }
 
-// PATCH — Update order status
+// PATCH — Update order status (staff/admin only)
 export async function PATCH(req: NextRequest) {
     try {
+        await requireRole("staff", "admin");
+
         const body = await req.json();
         const { orderId, status } = body;
 

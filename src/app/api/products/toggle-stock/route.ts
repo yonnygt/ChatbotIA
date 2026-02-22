@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth";
 
 export async function PATCH(req: NextRequest) {
     try {
+        await requireRole("staff", "admin");
         const body = await req.json();
         const { productId, inStock } = body;
 

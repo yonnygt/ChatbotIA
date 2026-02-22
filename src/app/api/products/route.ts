@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products, sections } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
+        await requireRole("staff", "admin");
         const body = await req.json();
         const { name, description, category, sectionId, price, unit, imageUrl, sku, location, inStock, taxType } = body;
 
@@ -96,6 +98,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
     try {
+        await requireRole("staff", "admin");
         const body = await req.json();
         const { id, ...updates } = body;
 
@@ -149,6 +152,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     try {
+        await requireRole("staff", "admin");
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
 

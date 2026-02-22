@@ -3,9 +3,22 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 import { hashPassword, createSession } from "@/lib/auth";
 import { eq } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
     try {
+        // Rate limit: 3 registrations per IP every 10 minutes
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown-ip";
+        const { limited, retryAfter } = rateLimit(`register_${ip}`, 3, 600000);
+        if (limited) {
+            return NextResponse.json(
+                { error: `Demasiados intentos. Espera ${retryAfter} segundos.` },
+                { status: 429, headers: { "Retry-After": String(retryAfter) } }
+            );
+        }
+
         const body = await req.json();
         const { email, password, name } = body;
 
@@ -16,9 +29,33 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Email validation
+        if (typeof email !== "string" || !EMAIL_REGEX.test(email) || email.length > 320) {
+            return NextResponse.json(
+                { error: "Email inválido" },
+                { status: 400 }
+            );
+        }
+
         if (password.length < 6) {
             return NextResponse.json(
                 { error: "La contraseña debe tener al menos 6 caracteres" },
+                { status: 400 }
+            );
+        }
+
+        if (password.length > 128) {
+            return NextResponse.json(
+                { error: "La contraseña es demasiado larga" },
+                { status: 400 }
+            );
+        }
+
+        // Sanitize name
+        const sanitizedName = String(name).trim().slice(0, 100);
+        if (sanitizedName.length < 2) {
+            return NextResponse.json(
+                { error: "El nombre debe tener al menos 2 caracteres" },
                 { status: 400 }
             );
         }
@@ -43,7 +80,7 @@ export async function POST(req: NextRequest) {
             .values({
                 email: email.toLowerCase().trim(),
                 passwordHash,
-                name: name.trim(),
+                name: sanitizedName,
                 role: "cliente",
             })
             .returning({

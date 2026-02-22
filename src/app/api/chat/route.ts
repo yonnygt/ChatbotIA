@@ -8,6 +8,26 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const PENDING_REQUESTS = new Set<string>();
 
+// ─── Product Cache (avoid DB query on every chat message) ────
+interface ProductCacheEntry {
+    data: any[];
+    timestamp: number;
+    key: string;
+}
+let productCache: ProductCacheEntry | null = null;
+const PRODUCT_CACHE_TTL = 60000; // 60 seconds
+
+function getCachedProducts(cacheKey: string) {
+    if (productCache && productCache.key === cacheKey && Date.now() - productCache.timestamp < PRODUCT_CACHE_TTL) {
+        return productCache.data;
+    }
+    return null;
+}
+
+function setCachedProducts(cacheKey: string, data: any[]) {
+    productCache = { data, timestamp: Date.now(), key: cacheKey };
+}
+
 export async function POST(req: NextRequest) {
     let sessionKey = "anonymous";
     try {
@@ -27,6 +47,24 @@ export async function POST(req: NextRequest) {
 
         const body = await req.json();
         const { message, category, history = [], currentCart = [] } = body;
+
+        // ─── Input Sanitization ────────────────────────
+        if (!message || typeof message !== "string" || message.trim().length === 0) {
+            return NextResponse.json(
+                { reply: "Por favor escribe un mensaje.", suggestedProducts: [], orderProposal: null },
+                { status: 400 }
+            );
+        }
+
+        if (message.length > 2000) {
+            return NextResponse.json(
+                { reply: "El mensaje es demasiado largo. Máximo 2000 caracteres.", suggestedProducts: [], orderProposal: null },
+                { status: 400 }
+            );
+        }
+
+        // Limit history to prevent prompt injection via massive context
+        const safeHistory = Array.isArray(history) ? history.slice(-50) : [];
 
         // User based deduplication to prevent double sends
         const currentUser = await getCurrentUser();
@@ -54,20 +92,29 @@ export async function POST(req: NextRequest) {
 
         // Fetch products from DB filtered by section slug
         let inventory;
+        const cacheKey = category || "__all__";
         try {
-            if (category) {
-                // Look up section by slug
-                const [section] = await db.select().from(sections).where(eq(sections.slug, category));
-                if (section) {
-                    inventory = await db.select().from(products).where(eq(products.sectionId, section.id));
-                } else {
-                    // Fallback to legacy category field
-                    inventory = await db.select().from(products).where(eq(products.category, category));
-                }
+            // Try cache first
+            const cached = getCachedProducts(cacheKey);
+            if (cached) {
+                inventory = cached;
+                console.log(`[Chat API] Using cached ${inventory.length} products for section: ${cacheKey}`);
             } else {
-                inventory = await db.select().from(products);
+                if (category) {
+                    // Look up section by slug
+                    const [section] = await db.select().from(sections).where(eq(sections.slug, category));
+                    if (section) {
+                        inventory = await db.select().from(products).where(eq(products.sectionId, section.id));
+                    } else {
+                        // Fallback to legacy category field
+                        inventory = await db.select().from(products).where(eq(products.category, category));
+                    }
+                } else {
+                    inventory = await db.select().from(products);
+                }
+                setCachedProducts(cacheKey, inventory);
+                console.log(`[Chat API] Fetched ${inventory.length} products for section: ${category || "all"}`);
             }
-            console.log(`[Chat API] Fetched ${inventory.length} products for section: ${category || "all"}`);
         } catch (dbError) {
             console.error("[Chat API] DB error:", dbError);
             return NextResponse.json({
@@ -216,7 +263,7 @@ NOTAS:
         ];
 
         // Add conversation history (clean, no injected context)
-        for (const msg of history) {
+        for (const msg of safeHistory) {
             contents.push({
                 role: msg.role === "user" ? "user" as const : "model" as const,
                 parts: [{ text: msg.content || msg.text || "" }],
@@ -288,7 +335,6 @@ NOTAS:
         return NextResponse.json(
             {
                 reply: "Error procesando tu mensaje. Intenta de nuevo.",
-                error: error instanceof Error ? error.message : String(error),
                 suggestedProducts: [],
                 orderProposal: null,
             },

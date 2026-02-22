@@ -2,11 +2,12 @@ import { db } from "./db";
 import { users, sessions } from "./schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { cookies } from "next/headers";
 
 // ─── Password Helpers ────────────────────────────
 export async function hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
+    return bcrypt.hash(password, 12);
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
@@ -15,12 +16,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 // ─── Session Helpers ─────────────────────────────
 function generateToken(): string {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let token = "";
-    for (let i = 0; i < 64; i++) {
-        token += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return token;
+    return crypto.randomBytes(32).toString("hex");
 }
 
 export async function createSession(userId: number): Promise<string> {

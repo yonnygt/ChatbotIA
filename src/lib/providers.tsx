@@ -150,8 +150,9 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
             new QueryClient({
                 defaultOptions: {
                     queries: {
-                        staleTime: 5 * 1000,
-                        refetchInterval: 10 * 1000,
+                        staleTime: 10 * 1000,
+                        refetchOnWindowFocus: true,
+                        retry: 2,
                     },
                 },
             })

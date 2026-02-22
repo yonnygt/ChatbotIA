@@ -12,14 +12,19 @@ interface TranscriptionResult {
         notes?: string;
         price?: number;
     }>;
+    serverBusy?: boolean;
 }
 
 export function useGeminiRecorder() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const [isRecording, setIsRecording] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const isProcessingRef = useRef(false);
     const streamRef = useRef<MediaStream | null>(null);
+    const retryCountRef = useRef(0);
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY = 2000;
 
     const startRecording = useCallback(async (): Promise<boolean> => {
         // Prevent starting if already recording or processing
@@ -35,6 +40,7 @@ export function useGeminiRecorder() {
             }
 
             isProcessingRef.current = true;
+            setIsProcessing(true);
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
@@ -52,6 +58,7 @@ export function useGeminiRecorder() {
             mediaRecorder.start();
             setIsRecording(true);
             isProcessingRef.current = false;
+            setIsProcessing(false);
 
             // Haptic feedback
             if (navigator.vibrate) navigator.vibrate(50);
@@ -60,7 +67,50 @@ export function useGeminiRecorder() {
             console.error("Error accessing microphone:", err);
             alert("Error al acceder al micrófono. Verifica los permisos.");
             isProcessingRef.current = false;
+            setIsProcessing(false);
             return false;
+        }
+    }, []);
+
+    const sendAudioToServer = useCallback(async (blob: Blob): Promise<TranscriptionResult | null> => {
+        try {
+            const formData = new FormData();
+            formData.append("audio", blob, "recording.webm");
+
+            const res = await fetch("/api/voice/transcribe", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) {
+                // Server busy (503) — auto retry with backoff
+                if (res.status === 503 && retryCountRef.current < MAX_RETRIES) {
+                    retryCountRef.current++;
+                    console.log(`[Audio] Server busy, retrying (${retryCountRef.current}/${MAX_RETRIES})...`);
+                    await new Promise((r) => setTimeout(r, RETRY_DELAY * retryCountRef.current));
+                    return sendAudioToServer(blob);
+                }
+
+                // Known error statuses (429 Rate Limit, 413 Payload Too Large)
+                if (res.status === 429 || res.status === 413 || res.status === 503) {
+                    try {
+                        const errorData: TranscriptionResult = await res.json();
+                        return errorData;
+                    } catch (e) {
+                        // fallback
+                    }
+                }
+
+                const errText = await res.text();
+                throw new Error(`Transcription failed (${res.status}): ${errText}`);
+            }
+
+            retryCountRef.current = 0; // Reset retry count on success
+            const data: TranscriptionResult = await res.json();
+            return data;
+        } catch (err) {
+            console.error("Transcription error:", err);
+            return null;
         }
     }, []);
 
@@ -80,6 +130,7 @@ export function useGeminiRecorder() {
 
         // Lock processing immediately
         isProcessingRef.current = true;
+        setIsProcessing(true);
 
         return new Promise((resolve) => {
             mr.onstop = async () => {
@@ -99,53 +150,26 @@ export function useGeminiRecorder() {
                     streamRef.current = null;
                 }
 
-                // Don't send empty recordings (< 1KB is likely silence/noise)
+                // Don't send empty recordings (<1KB is likely silence/noise)
                 if (blob.size < 1000) {
                     console.warn("Recording too short, ignoring:", blob.size, "bytes");
                     isProcessingRef.current = false;
+                    setIsProcessing(false);
                     resolve(null);
                     return;
                 }
 
-                try {
-                    const formData = new FormData();
-                    formData.append("audio", blob, "recording.webm");
-
-                    const res = await fetch("/api/voice/transcribe", {
-                        method: "POST",
-                        body: formData,
-                    });
-
-                    if (!res.ok) {
-                        // If it's a known error status (429 Rate Limit, 413 Payload Too Large)
-                        // we return the friendly JSON message the API sends so the UI can show it
-                        if (res.status === 429 || res.status === 413) {
-                            try {
-                                const errorData: TranscriptionResult = await res.json();
-                                isProcessingRef.current = false;
-                                resolve(errorData);
-                                return;
-                            } catch (e) {
-                                // fallback to reading text if JSON fails
-                            }
-                        }
-
-                        const errText = await res.text();
-                        throw new Error(`Transcription failed (${res.status}): ${errText}`);
-                    }
-                    const data: TranscriptionResult = await res.json();
-                    isProcessingRef.current = false;
-                    resolve(data);
-                } catch (err) {
-                    console.error("Transcription error:", err);
-                    isProcessingRef.current = false;
-                    resolve(null);
-                }
+                // Send to server with automatic retry on 503
+                retryCountRef.current = 0;
+                const result = await sendAudioToServer(blob);
+                isProcessingRef.current = false;
+                setIsProcessing(false);
+                resolve(result);
             };
 
             mr.stop();
         });
-    }, []);
+    }, [sendAudioToServer]);
 
     const toggleRecording = useCallback(async (): Promise<TranscriptionResult | null> => {
         if (isRecording) {
@@ -158,7 +182,7 @@ export function useGeminiRecorder() {
 
     return {
         isRecording,
-        isProcessing: isProcessingRef.current,
+        isProcessing,
         startRecording,
         stopRecording,
         toggleRecording,
