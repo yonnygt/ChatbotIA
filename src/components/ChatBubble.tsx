@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product, OrderProposal } from "@/lib/types";
+import ReactMarkdown from "react-markdown";
 
 interface ChatBubbleProps {
     readonly role: "bot" | "user";
@@ -62,7 +63,26 @@ export default function ChatBubble({
             <div className="flex flex-col items-start gap-1 max-w-[85%]">
                 <span className="ml-1 text-[11px] font-semibold text-text-secondary/70">Asistente SuperMarket</span>
                 <div className="rounded-2xl rounded-tl-sm bg-white p-3.5 shadow-sm text-sm text-text-main border border-gray-100/80 w-full">
-                    <p className={product || orderProposal ? "mb-3 px-0.5" : ""}>{text}</p>
+                    <div className={`chat-markdown ${product || orderProposal ? "mb-3 px-0.5" : ""}`}>
+                        <ReactMarkdown
+                            components={{
+                                p: ({ children }) => <p className="mb-1.5 last:mb-0 leading-relaxed">{children}</p>,
+                                strong: ({ children }) => <strong className="font-bold text-slate-800">{children}</strong>,
+                                ul: ({ children }) => <ul className="my-1.5 space-y-1 list-none pl-0">{children}</ul>,
+                                ol: ({ children }) => <ol className="my-1.5 space-y-1 list-decimal pl-5">{children}</ol>,
+                                li: ({ children }) => (
+                                    <li className="flex items-start gap-1.5 text-sm">
+                                        <span className="text-primary mt-0.5 shrink-0">•</span>
+                                        <span>{children}</span>
+                                    </li>
+                                ),
+                                h3: ({ children }) => <h3 className="font-bold text-sm text-slate-800 mt-2 mb-1">{children}</h3>,
+                                h4: ({ children }) => <h4 className="font-bold text-xs text-slate-700 mt-1.5 mb-0.5 uppercase tracking-wider">{children}</h4>,
+                            }}
+                        >
+                            {text}
+                        </ReactMarkdown>
+                    </div>
 
                     {/* Product card */}
                     {product && (

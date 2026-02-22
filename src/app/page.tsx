@@ -329,7 +329,7 @@ export default function HomePage() {
               <h3 className="text-3xl font-black text-white tracking-tighter mb-4 leading-none">Ordena con tu voz</h3>
               <p className="text-sm text-slate-400 font-medium mb-8 max-w-[280px] mx-auto leading-relaxed">Dile a nuestra IA lo que necesitas y nosotros nos encargamos del resto.</p>
 
-              <Link href="/chat/carnes" className="group flex items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-primary to-emerald-400 p-1 pr-6 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20">
+              <Link href="/chat/carniceria" className="group flex items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-primary to-emerald-400 p-1 pr-6 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20">
                 <div className="h-12 w-12 rounded-full bg-[#0f172a] flex items-center justify-center text-white shadow-lg group-hover:rotate-[360deg] duration-700 transition-transform">
                   <span className="material-symbols-outlined text-[24px]">mic</span>
                 </div>

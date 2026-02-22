@@ -117,6 +117,19 @@ export function useGeminiRecorder() {
                     });
 
                     if (!res.ok) {
+                        // If it's a known error status (429 Rate Limit, 413 Payload Too Large)
+                        // we return the friendly JSON message the API sends so the UI can show it
+                        if (res.status === 429 || res.status === 413) {
+                            try {
+                                const errorData: TranscriptionResult = await res.json();
+                                isProcessingRef.current = false;
+                                resolve(errorData);
+                                return;
+                            } catch (e) {
+                                // fallback to reading text if JSON fails
+                            }
+                        }
+
                         const errText = await res.text();
                         throw new Error(`Transcription failed (${res.status}): ${errText}`);
                     }

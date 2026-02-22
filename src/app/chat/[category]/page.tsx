@@ -44,6 +44,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
     const [loading, setLoading] = useState(false);
     const [isConfirming, setIsConfirming] = useState(false);
     const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
+    const [quickReplies, setQuickReplies] = useState<string[]>(["¿Qué tienen disponible?", "Quiero hacer un pedido", "Ver mis favoritos"]);
     const [currentCart, setCurrentCart] = useState<OrderProposalItem[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const confirmationShownRef = useRef(false);
@@ -99,6 +100,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
         };
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
+        setQuickReplies([]);
         setLoading(true);
 
         try {
@@ -205,6 +207,7 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
 
             if (data.product) botMessage.product = data.product;
             if (Array.isArray(data.suggestedProducts)) setSuggestedProducts(data.suggestedProducts);
+            if (Array.isArray(data.quickReplies)) setQuickReplies(data.quickReplies);
 
             setMessages((prev) => [...prev, botMessage]);
         } catch {
@@ -378,6 +381,23 @@ export default function ChatPage({ params }: { params: Promise<{ category: strin
             {suggestedProducts.length > 0 && (
                 <div className="px-4 pb-1 border-t border-gray-100/60">
                     <QuickSuggestions products={suggestedProducts} onSelect={handleSelectSuggestion} />
+                </div>
+            )}
+
+            {/* Quick Replies */}
+            {quickReplies.length > 0 && !loading && (
+                <div className="px-4 py-2 border-t border-gray-100/60 overflow-x-auto">
+                    <div className="flex gap-2 min-w-min">
+                        {quickReplies.map((reply, i) => (
+                            <button
+                                key={i}
+                                onClick={() => handleSend(reply)}
+                                className="shrink-0 px-4 py-2 rounded-full bg-primary/5 border border-primary/20 text-xs font-bold text-primary hover:bg-primary/10 hover:border-primary/30 active:scale-95 transition-all whitespace-nowrap"
+                            >
+                                {reply}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
 

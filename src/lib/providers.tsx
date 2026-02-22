@@ -115,9 +115,30 @@ function OrderStatusMonitor() {
             }
         };
 
+        // Initial check
         checkOrders();
-        const interval = setInterval(checkOrders, 8000);
-        return () => clearInterval(interval);
+
+        // Setup polling interval (30 seconds)
+        let interval = setInterval(checkOrders, 30000);
+
+        // Visibility API: Pause polling when tab is inactive
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                clearInterval(interval);
+                console.log("[OrderMonitor] Tab hidden, paused polling.");
+            } else {
+                checkOrders(); // fetch immediately on return
+                interval = setInterval(checkOrders, 30000);
+                console.log("[OrderMonitor] Tab visible, resumed polling.");
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [user]);
 
     return null;

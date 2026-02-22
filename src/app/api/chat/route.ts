@@ -2,13 +2,46 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products, favorites, sections } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
+
+const PENDING_REQUESTS = new Set<string>();
 
 export async function POST(req: NextRequest) {
+    let sessionKey = "anonymous";
     try {
+        const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown-ip";
+        // Base rate limiting on IP
+        const { limited, retryAfter } = rateLimit(`chat_${ip}`, 20, 60000); // 20 requests per minute
+        if (limited) {
+            return NextResponse.json(
+                {
+                    reply: `Por favor espera ${retryAfter} segundos antes de enviar otro mensaje.`,
+                    suggestedProducts: [],
+                    orderProposal: null,
+                },
+                { status: 429, headers: { "Retry-After": String(retryAfter) } }
+            );
+        }
+
         const body = await req.json();
         const { message, category, history = [], currentCart = [] } = body;
+
+        // User based deduplication to prevent double sends
+        const currentUser = await getCurrentUser();
+        sessionKey = currentUser ? `user_${currentUser.id}` : `ip_${ip}`;
+        if (PENDING_REQUESTS.has(sessionKey)) {
+            return NextResponse.json(
+                {
+                    reply: "Ya estoy procesando tu mensaje anterior. Un momento por favor.",
+                    suggestedProducts: [],
+                    orderProposal: null,
+                },
+                { status: 429 }
+            );
+        }
+        PENDING_REQUESTS.add(sessionKey);
 
         const apiKey = process.env.GOOGLE_API_KEY?.trim();
 
@@ -44,18 +77,38 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        const productList = inventory
-            .map(
-                (p) =>
-                    `- ${p.name} | Precio: ${p.price}€/kg | ID: ${p.id} | En stock: ${p.inStock ? "Sí" : "No"} | Descripción: ${p.description || "N/A"}`
-            )
-            .join("\n");
+        // Separate in-stock and out-of-stock for the AI
+        const inStockProducts = inventory.filter(p => p.inStock);
+        const outOfStockProducts = inventory.filter(p => !p.inStock);
+
+        const inStockList = inStockProducts.length > 0
+            ? inStockProducts.map(p => `- ${p.name} | ${p.price}€/kg | ${p.description || "Sin descripción"} [productId=${p.id}]`).join("\n")
+            : "(No hay productos disponibles en este momento)";
+
+        const outOfStockList = outOfStockProducts.length > 0
+            ? outOfStockProducts.map(p => `- ${p.name} (AGOTADO)`).join("\n")
+            : "";
+
+        const outOfStockSection = outOfStockList
+            ? `\nPRODUCTOS AGOTADOS (informar si preguntan, NUNCA ofrecerlos activamente):\n${outOfStockList}\n`
+            : "";
 
         // Fetch user favorites if authenticated
         let favoritesContext = "";
         try {
             const currentUser = await getCurrentUser();
             if (currentUser) {
+                // Build favorites query filtered by current section
+                const favConditions = [eq(favorites.userId, currentUser.id)];
+
+                // Filter favorites to current section if we have one
+                if (category) {
+                    const [section] = await db.select().from(sections).where(eq(sections.slug, category));
+                    if (section) {
+                        favConditions.push(eq(products.sectionId, section.id));
+                    }
+                }
+
                 const userFavorites = await db
                     .select({
                         productName: products.name,
@@ -65,13 +118,13 @@ export async function POST(req: NextRequest) {
                     })
                     .from(favorites)
                     .innerJoin(products, eq(favorites.productId, products.id))
-                    .where(eq(favorites.userId, currentUser.id));
+                    .where(and(...favConditions));
 
                 if (userFavorites.length > 0) {
                     const favList = userFavorites
                         .map(f => `- ${f.productName} | ${f.productPrice}€ | ${f.inStock ? "En stock" : "Agotado"}`)
                         .join("\n");
-                    favoritesContext = `\nPRODUCTOS FAVORITOS DEL CLIENTE (los ha marcado como favoritos):\n${favList}\n`;
+                    favoritesContext = `\nPRODUCTOS FAVORITOS DEL CLIENTE EN ESTA SECCIÓN:\n${favList}\n`;
                 }
             }
         } catch (err) {
@@ -86,38 +139,48 @@ export async function POST(req: NextRequest) {
         const systemPrompt = `Eres un asistente experto y amable que atiende a clientes en un supermercado premium.
 Tu nombre es "Asistente SuperMarket".
 
-INVENTARIO DISPONIBLE (categoría: ${category || "todas"}):
-${productList}
+═══════════════════════════════════════════
+PRODUCTOS DISPONIBLES PARA VENTA (sección: ${category || "todas"}):
+${inStockList}
+${outOfStockSection}
+═══════════════════════════════════════════
 ${favoritesContext}${cartContext}
-REGLAS FUNDAMENTALES:
+⚠️ REGLA MÁXIMA — INVENTARIO CERRADO:
+• La lista de PRODUCTOS DISPONIBLES de arriba es el ÚNICO inventario que existe. NO existe ningún otro producto.
+• JAMÁS inventes, imagines, sugieras ni menciones productos que NO aparezcan TEXTUALMENTE en la lista anterior.
+• Si el cliente pide algo que NO está en la lista, responde: "Lo siento, ese producto no está disponible en nuestra sección en este momento."
+• NUNCA sugieras productos complementarios (papas, salsas, aderezos, guarniciones, etc.) a menos que aparezcan EXPLÍCITAMENTE en la lista de arriba.
+• Si el cliente pregunta "¿qué tienes?", lista ÚNICAMENTE los productos de la lista PRODUCTOS DISPONIBLES.
+• Los productos AGOTADOS solo se mencionan si el cliente pregunta específicamente por ellos. NUNCA los ofrezcas activamente.
+• NUNCA muestres IDs de productos, códigos internos ni datos técnicos al cliente. El [productId=X] es SOLO para uso interno en orderProposal.
+
+REGLAS GENERALES:
 1. Responde SIEMPRE en español, de forma natural y amigable.
-2. Cuando el cliente pida un producto, busca coincidencias en el inventario.
-3. Si no encuentras el producto exacto, sugiere alternativas del inventario.
-4. Si el producto no está en stock, infórmalo amablemente.
-5. TODAS las cantidades DEBEN estar en KILOGRAMOS (kg). NUNCA uses libras (lb). Ejemplo: "0.5kg", "1kg", "2kg".
-6. En el campo "reply" usa texto plano, NO uses markdown ni asteriscos ni formato especial. Usa emojis para dar énfasis.
-7. Sé proactivo sugiriendo productos complementarios SOLO si aparecen explícitamente en la lista de productos disponibles. NUNCA inventes productos que no estén en el inventario.
+2. Cuando el cliente pida un producto, busca coincidencias EXACTAS en el inventario disponible.
+3. Si no encuentras el producto exacto, sugiere alternativas SOLO de la lista de productos disponibles.
+4. TODAS las cantidades DEBEN estar en KILOGRAMOS (kg). NUNCA uses libras (lb).
+5. En el campo "reply" usa formato Markdown para mejor visualización: usa **negrita** para nombres de productos, listas con - para enumerar productos, y emojis para dar énfasis. NO uses bloques de código.
 
 REGLAS CRÍTICAS PARA EL CARRITO Y orderProposal:
-8. El "CARRITO ACTUAL DEL CLIENTE" mostrado arriba contiene los items que el cliente YA ha pedido en esta conversación.
-9. Cuando el cliente pida algo NUEVO, DEBES devolver un orderProposal que contenga TODOS los items anteriores del carrito MÁS los nuevos items. NUNCA pierdas los items anteriores.
-10. Si el cliente quiere MODIFICAR una cantidad de un item existente, actualiza ese item y mantén los demás.
-11. Si el cliente quiere ELIMINAR un item, quítalo del orderProposal y mantén los demás.
-12. SIEMPRE que haya al menos un item en el pedido, devuelve orderProposal con los items acumulados.
+6. El "CARRITO ACTUAL DEL CLIENTE" contiene los items que el cliente YA ha pedido.
+7. Cuando el cliente pida algo NUEVO, devuelve un orderProposal con TODOS los items anteriores MÁS los nuevos. NUNCA pierdas items anteriores.
+8. Si el cliente quiere MODIFICAR una cantidad, actualiza ese item y mantén los demás.
+9. Si el cliente quiere ELIMINAR un item, quítalo y mantén los demás.
+10. SIEMPRE que haya al menos un item, devuelve orderProposal con los items acumulados.
 
-REGLAS DE CONFIRMACIÓN (MUY IMPORTANTE):
-13. Pon "showConfirmation": false mientras el cliente siga pidiendo o modificando items.
-14. Pon "showConfirmation": true SOLO cuando el cliente diga EXPLÍCITAMENTE que quiere finalizar: "eso es todo", "cuánto es", "listo", "ya", "así está bien", "nada más".
-15. Si el cliente dice "confirmar", "confirmo", "dale", "sí", "ok" o similar DESPUÉS de que ya se mostró el resumen:
+REGLAS DE CONFIRMACIÓN:
+11. Pon "showConfirmation": false mientras el cliente siga pidiendo o modificando items.
+12. Pon "showConfirmation": true SOLO cuando el cliente diga EXPLÍCITAMENTE que quiere finalizar: "eso es todo", "cuánto es", "listo", "ya", "así está bien", "nada más".
+13. Si el cliente dice "confirmar", "confirmo", "dale", "sí" DESPUÉS de que ya se mostró el resumen:
     - Pon "autoConfirm": true
-    - DEBES incluir el orderProposal completo con TODOS los items del carrito
+    - Incluye el orderProposal completo con TODOS los items
     - Pon "showConfirmation": true
-16. Si el carrito está vacío y es una conversación casual (saludo, pregunta general), pon orderProposal en null.
-17. NO preguntes múltiples veces si desea confirmar. Si ya mostraste el resumen con showConfirmation: true, y el cliente responde afirmativamente, activa autoConfirm: true y envía el orderProposal completo.
-18. CRÍTICO: Si autoConfirm es true, orderProposal NO puede ser null. Debe contener todos los items del carrito.
-19. Si el cliente menciona "mis favoritos", "lo de siempre", "productos favoritos" o similar, consulta la sección PRODUCTOS FAVORITOS DEL CLIENTE y sugiere esos productos. Si alguno está agotado, infórmalo.
+14. Si el carrito está vacío y es conversación casual, pon orderProposal en null.
+15. NO preguntes múltiples veces si desea confirmar.
+16. CRÍTICO: Si autoConfirm es true, orderProposal NO puede ser null.
+17. Si el cliente menciona "mis favoritos" o "lo de siempre", consulta PRODUCTOS FAVORITOS DEL CLIENTE.
 
-FORMATO DE RESPUESTA — Responde SOLO con un objeto JSON válido, SIN texto adicional:
+FORMATO DE RESPUESTA — SOLO JSON válido, SIN texto adicional:
 {
   "reply": "Tu mensaje al cliente",
   "suggestedProducts": [{ "id": 1, "name": "Nombre", "price": "12.50", "unit": "kg" }],
@@ -128,20 +191,28 @@ FORMATO DE RESPUESTA — Responde SOLO con un objeto JSON válido, SIN texto adi
     "total": "24.45",
     "estimatedMinutes": 10
   },
+  "quickReplies": ["Opción 1", "Opción 2"],
   "showConfirmation": false,
   "autoConfirm": false
 }
 
+REGLAS DE quickReplies (respuestas rápidas):
+- SIEMPRE incluye 2-4 opciones de respuesta rápida relevantes al contexto actual.
+- Si el cliente acaba de pedir un producto: ["Eso es todo", "Quiero agregar algo más", "¿Qué más tienes?"]
+- Si preguntas si desea algo más: ["Sí, quiero más", "No, eso es todo", "Ver productos disponibles"]
+- Si se muestra el resumen/confirmación: ["Confirmar pedido", "Modificar pedido", "Cancelar"]
+- Si es conversación casual o saludo inicial: ["¿Qué tienen disponible?", "Quiero hacer un pedido", "Ver mis favoritos"]
+- Las opciones deben ser frases cortas (máx 25 caracteres) y naturales en español.
+
 NOTAS:
-- "suggestedProducts" solo cuando quieras recomendar productos adicionales.
+- "suggestedProducts" SOLO con productos de la lista de inventario disponible, NUNCA inventados.
 - Si es conversación casual sin pedido, pon orderProposal en null y suggestedProducts vacío.
-- "autoConfirm" debe ser true SOLO cuando el cliente confirme explícitamente un pedido que ya tiene showConfirmation: true.
-- RESPONDE SOLO JSON válido. Nada de texto antes o después del JSON.`;
+- RESPONDE SOLO JSON válido.`;
 
         // Build conversation for Gemini
         const contents = [
             { role: "user" as const, parts: [{ text: systemPrompt }] },
-            { role: "model" as const, parts: [{ text: '{"reply": "¡Entendido! Estoy listo para atenderte.", "suggestedProducts": [], "orderProposal": null, "showConfirmation": false, "autoConfirm": false}' }] },
+            { role: "model" as const, parts: [{ text: '{"reply": "¡Entendido! Estoy listo para atenderte.", "suggestedProducts": [], "orderProposal": null, "quickReplies": [], "showConfirmation": false, "autoConfirm": false}' }] },
         ];
 
         // Add conversation history (clean, no injected context)
@@ -165,7 +236,13 @@ NOTAS:
                 model: "gemini-2.5-flash-lite",
             });
 
-            const result = await model.generateContent({ contents });
+            // 30s timeout for Gemini API call
+            const abortController = new AbortController();
+            const timeoutId = setTimeout(() => abortController.abort(), 30000);
+
+            const result = await model.generateContent({ contents }, { signal: abortController.signal });
+            clearTimeout(timeoutId);
+
             const response = result.response;
             text = response.text();
             console.log("[Chat API] Gemini raw response:", text.substring(0, 300));
@@ -198,8 +275,6 @@ NOTAS:
             const cleanText = text
                 .replace(/```json\n?/g, "")
                 .replace(/```/g, "")
-                .replace(/\*\*/g, "")
-                .replace(/^\* /gm, "• ")
                 .trim();
 
             return NextResponse.json({
@@ -219,5 +294,7 @@ NOTAS:
             },
             { status: 500 }
         );
+    } finally {
+        PENDING_REQUESTS.delete(sessionKey);
     }
 }
