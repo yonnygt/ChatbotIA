@@ -66,7 +66,7 @@ function OrderStatusMonitor() {
                         const prevStatus = previousStatuses.current[order.id];
                         if (prevStatus && prevStatus !== order.status) {
                             let message = "";
-                            let type: "info" | "success" = "info";
+                            let type: "info" | "success" | "warning" = "info";
 
                             if (order.status === "preparing") {
                                 message = `Pedido #${order.orderNumber?.slice(-6) || order.id} en preparación 🔪`;
@@ -74,6 +74,9 @@ function OrderStatusMonitor() {
                             } else if (order.status === "ready") {
                                 message = `¡Pedido #${order.orderNumber?.slice(-6) || order.id} listo! 🎉`;
                                 type = "success";
+                            } else if (order.status === "cancelled") {
+                                message = `Pedido #${order.orderNumber?.slice(-6) || order.id} fue cancelado ❌`;
+                                type = "warning";
                             }
 
                             if (message) {

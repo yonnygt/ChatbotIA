@@ -105,48 +105,52 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
     const ivaAmount = form.taxType === "gravado" ? priceNum * IVA_RATE : 0;
     const totalWithIva = priceNum + ivaAmount;
 
+    const inputClass = "w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all";
+    const labelClass = "text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5 block";
+    const selectClass = "w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary/50 transition-all";
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose} />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg bg-white border border-gray-200 rounded-3xl p-6 max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="relative w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-3xl p-6 max-h-[90vh] overflow-y-auto shadow-2xl backdrop-blur-xl">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-extrabold text-gray-900">
+                    <h2 className="text-lg font-black text-white">
                         {isEdit ? "Editar Producto" : "Nuevo Producto"}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="h-8 w-8 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                        className="h-8 w-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
                     >
-                        <span className="material-symbols-outlined text-gray-500 text-[18px]">close</span>
+                        <span className="material-symbols-outlined text-slate-400 text-[18px]">close</span>
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name */}
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Nombre *</label>
+                        <label className={labelClass}>Nombre *</label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             required
-                            className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                            className={inputClass}
                             placeholder="Ej: Producto o Artículo"
                         />
                     </div>
 
                     {/* Description */}
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Descripción</label>
+                        <label className={labelClass}>Descripción</label>
                         <textarea
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             rows={2}
-                            className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                            className={`${inputClass} resize-none`}
                             placeholder="Descripción opcional"
                         />
                     </div>
@@ -154,28 +158,28 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                     {/* Sección + Unit row */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Sección *</label>
+                            <label className={labelClass}>Sección *</label>
                             <select
                                 value={form.sectionId}
                                 onChange={(e) => setForm({ ...form, sectionId: parseInt(e.target.value) })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                                className={selectClass}
                             >
                                 {sections.map((s) => (
-                                    <option key={s.id} value={s.id}>{s.emoji} {s.name}</option>
+                                    <option key={s.id} value={s.id} className="bg-[#0f172a]">{s.emoji} {s.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Unidad</label>
+                            <label className={labelClass}>Unidad</label>
                             <select
                                 value={form.unit}
                                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                                className={selectClass}
                             >
-                                <option value="kg">Kilogramo (kg)</option>
-                                <option value="lb">Libra (lb)</option>
-                                <option value="unidad">Unidad</option>
-                                <option value="paquete">Paquete</option>
+                                <option value="kg" className="bg-[#0f172a]">Kilogramo (kg)</option>
+                                <option value="lb" className="bg-[#0f172a]">Libra (lb)</option>
+                                <option value="unidad" className="bg-[#0f172a]">Unidad</option>
+                                <option value="paquete" className="bg-[#0f172a]">Paquete</option>
                             </select>
                         </div>
                     </div>
@@ -183,7 +187,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                     {/* Price + Tax Type row */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Precio USD *</label>
+                            <label className={labelClass}>Precio USD *</label>
                             <input
                                 type="number"
                                 step="0.01"
@@ -191,42 +195,42 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                                 value={form.price}
                                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                                 required
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
+                                className={inputClass}
                                 placeholder="0.00"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Tipo Fiscal *</label>
+                            <label className={labelClass}>Tipo Fiscal *</label>
                             <select
                                 value={form.taxType}
                                 onChange={(e) => setForm({ ...form, taxType: e.target.value as "gravado" | "exento" })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-primary/50 transition-all"
+                                className={selectClass}
                             >
-                                <option value="gravado">Gravado (IVA 16%)</option>
-                                <option value="exento">Exento (sin IVA)</option>
+                                <option value="gravado" className="bg-[#0f172a]">Gravado (IVA 16%)</option>
+                                <option value="exento" className="bg-[#0f172a]">Exento (sin IVA)</option>
                             </select>
                         </div>
                     </div>
 
                     {/* IVA calculation preview */}
                     {priceNum > 0 && (
-                        <div className={`rounded-xl p-3 border ${form.taxType === "gravado" ? "bg-blue-50 border-blue-200" : "bg-amber-50 border-amber-200"}`}>
+                        <div className={`rounded-xl p-3 border ${form.taxType === "gravado" ? "bg-blue-500/10 border-blue-500/20" : "bg-amber-500/10 border-amber-500/20"}`}>
                             <div className="flex items-center justify-between text-xs mb-1">
-                                <span className="text-gray-500">Precio base</span>
-                                <span className="font-bold text-gray-700">${priceNum.toFixed(2)}</span>
+                                <span className="text-slate-400">Precio base</span>
+                                <span className="font-bold text-white">${priceNum.toFixed(2)}</span>
                             </div>
                             {form.taxType === "gravado" && (
                                 <div className="flex items-center justify-between text-xs mb-1">
-                                    <span className="text-gray-500">IVA (16%)</span>
-                                    <span className="font-bold text-blue-600">+${ivaAmount.toFixed(2)}</span>
+                                    <span className="text-slate-400">IVA (16%)</span>
+                                    <span className="font-bold text-blue-400">+${ivaAmount.toFixed(2)}</span>
                                 </div>
                             )}
-                            <div className="flex items-center justify-between text-sm pt-1 border-t border-gray-200/50">
-                                <span className="font-bold text-gray-700">Total</span>
+                            <div className="flex items-center justify-between text-sm pt-1 border-t border-white/10">
+                                <span className="font-bold text-white">Total</span>
                                 <span className="font-extrabold text-primary">${totalWithIva.toFixed(2)}</span>
                             </div>
                             {form.taxType === "exento" && (
-                                <p className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+                                <p className="text-[10px] text-amber-400 mt-1 flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[12px]">info</span>
                                     Este producto está exento de IVA
                                 </p>
@@ -237,22 +241,22 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                     {/* SKU + Location */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">SKU</label>
+                            <label className={labelClass}>SKU</label>
                             <input
                                 type="text"
                                 value={form.sku}
                                 onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 transition-all"
+                                className={inputClass}
                                 placeholder="Opcional"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Ubicación</label>
+                            <label className={labelClass}>Ubicación</label>
                             <input
                                 type="text"
                                 value={form.location}
                                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 transition-all"
+                                className={inputClass}
                                 placeholder="Ej: Vitrina A"
                             />
                         </div>
@@ -260,18 +264,18 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
 
                     {/* Image URL */}
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">URL de Imagen</label>
+                        <label className={labelClass}>URL de Imagen</label>
                         <input
                             type="url"
                             value={form.imageUrl}
                             onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                            className="w-full px-4 py-2.5 rounded-xl bg-[#f3f6f4] border border-gray-200 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:border-primary/50 transition-all"
+                            className={inputClass}
                             placeholder="https://..."
                         />
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-500 text-xs font-medium rounded-xl p-3">
+                        <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl p-3">
                             <span className="material-symbols-outlined text-[16px]">error</span>
                             {error}
                         </div>
@@ -283,7 +287,7 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                             <button
                                 type="button"
                                 onClick={handleDelete}
-                                className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-500 text-sm font-bold hover:bg-red-100 transition-all"
+                                className="px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 transition-all"
                             >
                                 Eliminar
                             </button>
@@ -292,14 +296,14 @@ export default function ProductFormModal({ product, onClose, onSaved }: ProductF
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2.5 rounded-xl bg-gray-100 text-gray-500 text-sm font-bold hover:bg-gray-200 transition-all"
+                            className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-sm font-bold hover:bg-white/10 transition-all"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={saving}
-                            className="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-soft hover:brightness-110 transition-all disabled:opacity-50"
+                            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-[#0f172a] text-sm font-black shadow-[0_4px_12px_rgba(19,236,91,0.25)] hover:brightness-110 transition-all disabled:opacity-50"
                         >
                             {saving ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
                         </button>

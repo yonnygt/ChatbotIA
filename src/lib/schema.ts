@@ -29,6 +29,7 @@ export const users = pgTable("users", {
     passwordHash: text("password_hash").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     role: varchar("role", { length: 20 }).notNull().default("cliente"),
+    sectionId: integer("section_id").references(() => sections.id),
     createdAt: timestamp("created_at").defaultNow(),
 });
 

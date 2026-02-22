@@ -26,10 +26,11 @@ const staffNav: NavItem[] = [
 export default function NavBar({ variant = "customer" }: { variant?: "customer" | "staff" }) {
     const pathname = usePathname();
     const items = variant === "staff" ? staffNav : customerNav;
+    const isStaff = variant === "staff";
 
     return (
-        <nav className={`fixed bottom-0 left-0 right-0 z-40 safe-area-bottom ${variant === "staff"
-            ? "bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+        <nav className={`fixed bottom-0 left-0 right-0 z-40 safe-area-bottom ${isStaff
+            ? "bg-[#0f172a]/80 backdrop-blur-2xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.3)]"
             : "bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
             }`}>
             <div className="flex items-center justify-around max-w-lg mx-auto px-2 py-2">
@@ -48,19 +49,19 @@ export default function NavBar({ variant = "customer" }: { variant?: "customer" 
                         >
                             <div
                                 className={`flex items-center justify-center h-8 w-8 rounded-xl transition-all ${isActive
-                                    ? variant === "staff"
-                                        ? "bg-primary/10 scale-110"
+                                    ? isStaff
+                                        ? "bg-primary/15 scale-110"
                                         : "bg-primary/15 scale-110"
-                                    : variant === "staff"
-                                        ? "hover:bg-gray-100"
+                                    : isStaff
+                                        ? "hover:bg-white/5"
                                         : "hover:bg-white/5"
                                     }`}
                             >
                                 <span
                                     className={`material-symbols-outlined text-[22px] transition-colors ${isActive
                                         ? "text-primary filled"
-                                        : variant === "staff"
-                                            ? "text-gray-400"
+                                        : isStaff
+                                            ? "text-slate-500"
                                             : "text-gray-400"
                                         }`}
                                 >
@@ -70,15 +71,15 @@ export default function NavBar({ variant = "customer" }: { variant?: "customer" 
                             <span
                                 className={`text-[10px] font-bold transition-colors ${isActive
                                     ? "text-primary"
-                                    : variant === "staff"
-                                        ? "text-gray-400"
+                                    : isStaff
+                                        ? "text-slate-500"
                                         : "text-gray-400"
                                     }`}
                             >
                                 {item.label}
                             </span>
                             {isActive && (
-                                <div className="w-1 h-1 rounded-full bg-primary mt-0.5" />
+                                <div className={`w-1 h-1 rounded-full mt-0.5 ${isStaff ? "bg-primary shadow-[0_0_6px_rgba(19,236,91,0.5)]" : "bg-primary"}`} />
                             )}
                         </Link>
                     );

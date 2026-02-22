@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { orders, orderItems } from "@/lib/schema";
+import { orders, orderItems, products } from "@/lib/schema";
 import { getCurrentUser, requireRole } from "@/lib/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 
-// GET — Fetch all orders (for dashboard)
+// GET — Fetch orders (filtered by staff section)
 export async function GET() {
     try {
         const user = await getCurrentUser();
@@ -12,9 +12,7 @@ export async function GET() {
             return NextResponse.json({ error: "No autorizado" }, { status: 401 });
         }
 
-        let query = db.select().from(orders);
-
-        // If customer, only show their own orders
+        // Customers: only their own orders
         if (user.role === "cliente") {
             const userOrders = await db
                 .select()
@@ -24,7 +22,51 @@ export async function GET() {
             return NextResponse.json({ orders: userOrders });
         }
 
-        // staff/admin see all
+        // Admin: see ALL orders
+        if (user.role === "admin") {
+            const allOrders = await db
+                .select()
+                .from(orders)
+                .orderBy(desc(orders.createdAt));
+            return NextResponse.json({ orders: allOrders });
+        }
+
+        // Staff: filter by their assigned section
+        if (user.role === "staff" && user.sectionId) {
+            // Get product IDs that belong to the staff's section
+            const sectionProducts = await db
+                .select({ id: products.id })
+                .from(products)
+                .where(eq(products.sectionId, user.sectionId));
+
+            const sectionProductIds = sectionProducts.map((p) => p.id);
+
+            if (sectionProductIds.length === 0) {
+                return NextResponse.json({ orders: [] });
+            }
+
+            // Get order IDs that contain at least one product from this section
+            const relevantOrderItems = await db
+                .select({ orderId: orderItems.orderId })
+                .from(orderItems)
+                .where(inArray(orderItems.productId, sectionProductIds));
+
+            const relevantOrderIds = [...new Set(relevantOrderItems.map((oi) => oi.orderId))];
+
+            if (relevantOrderIds.length === 0) {
+                return NextResponse.json({ orders: [] });
+            }
+
+            const filteredOrders = await db
+                .select()
+                .from(orders)
+                .where(inArray(orders.id, relevantOrderIds))
+                .orderBy(desc(orders.createdAt));
+
+            return NextResponse.json({ orders: filteredOrders });
+        }
+
+        // Staff without assigned section: see all (fallback)
         const allOrders = await db
             .select()
             .from(orders)
@@ -52,7 +94,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "El pedido está vacío" }, { status: 400 });
         }
 
-        // Limit items to a reasonable amount
         if (items.length > 50) {
             return NextResponse.json({ error: "Demasiados items en el pedido" }, { status: 400 });
         }
@@ -72,7 +113,6 @@ export async function POST(req: Request) {
             })
             .returning();
 
-        // Parse qty: extract numeric value from strings like "0.5kg", "300g"
         const parseQty = (qty: string): string => {
             if (!qty) return "1";
             const match = String(qty).match(/([\d.]+)/);
@@ -93,7 +133,6 @@ export async function POST(req: Request) {
                 await db.insert(orderItems).values(validItems);
             }
         } catch (itemError) {
-            // Log but don't fail — the order itself was already created
             console.warn("Could not insert order_items:", itemError);
         }
 
@@ -114,6 +153,11 @@ export async function PATCH(req: NextRequest) {
 
         if (!orderId || !status) {
             return NextResponse.json({ error: "orderId and status required" }, { status: 400 });
+        }
+
+        const validStatuses = ["pending", "preparing", "ready", "completed", "cancelled"];
+        if (!validStatuses.includes(status)) {
+            return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
         }
 
         const [updated] = await db

@@ -14,6 +14,7 @@ export async function GET() {
                 email: users.email,
                 name: users.name,
                 role: users.role,
+                sectionId: users.sectionId,
                 createdAt: users.createdAt,
             })
             .from(users);
@@ -36,26 +37,41 @@ export async function PATCH(req: NextRequest) {
         await requireRole("admin");
 
         const body = await req.json();
-        const { userId, role } = body;
+        const { userId, role, sectionId } = body;
 
-        if (!userId || !role) {
-            return NextResponse.json({ error: "userId y role son requeridos" }, { status: 400 });
+        if (!userId) {
+            return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
         }
 
-        const validRoles = ["cliente", "staff", "admin"];
-        if (!validRoles.includes(role)) {
-            return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
+        const updateFields: Record<string, any> = {};
+
+        if (role) {
+            const validRoles = ["cliente", "staff", "admin"];
+            if (!validRoles.includes(role)) {
+                return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
+            }
+            updateFields.role = role;
+        }
+
+        // Allow setting sectionId (can be null to unassign)
+        if (sectionId !== undefined) {
+            updateFields.sectionId = sectionId;
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            return NextResponse.json({ error: "Nada que actualizar" }, { status: 400 });
         }
 
         const [updated] = await db
             .update(users)
-            .set({ role })
+            .set(updateFields)
             .where(eq(users.id, userId))
             .returning({
                 id: users.id,
                 email: users.email,
                 name: users.name,
                 role: users.role,
+                sectionId: users.sectionId,
             });
 
         if (!updated) {
@@ -70,7 +86,7 @@ export async function PATCH(req: NextRequest) {
         if (error.message === "FORBIDDEN") {
             return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
         }
-        console.error("Error updating user role:", error);
+        console.error("Error updating user:", error);
         return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
     }
 }

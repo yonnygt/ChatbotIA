@@ -55,12 +55,12 @@
   color-scheme: light;
 }
 
-/* Staff Theme (Light) */
+/* Staff Theme (Dark — matching login) */
 .theme-staff {
-  --bg-page: #f3f6f4;
-  --text-page: #1a2e23;
-  --surface-card: #ffffff;
-  color-scheme: light;
+  --bg-page: #0f172a;
+  --text-page: #f1f5f9;
+  --surface-card: rgba(255, 255, 255, 0.05);
+  color-scheme: dark;
 }
 
 body {

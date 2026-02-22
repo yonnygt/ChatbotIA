@@ -5,6 +5,7 @@ export interface User {
     email: string;
     name: string;
     role: "cliente" | "staff" | "admin";
+    sectionId?: number | null;
     createdAt: string | null;
 }
 

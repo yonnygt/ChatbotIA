@@ -51,6 +51,7 @@ export async function getSessionUser(token: string) {
             email: users.email,
             name: users.name,
             role: users.role,
+            sectionId: users.sectionId,
             createdAt: users.createdAt,
         })
         .from(users)
